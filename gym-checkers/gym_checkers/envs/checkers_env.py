@@ -40,7 +40,6 @@ class CheckersEnv(gym.Env):
         print("Gym step")
 
     def reset(self):
-        #Possibly reset current state etc
         print("Gym reset")
 
     def render(self, mode='human', close=False):
