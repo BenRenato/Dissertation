@@ -38,6 +38,16 @@ class Player:
         else:
             return "White"
 
+    def get_current_moveable_pieces(self):
+        return self.current_moveable_pieces
+
+    def get_current_pieces(self):
+        return self.currentpieces
+
+    def update_moveable_pieces(self, updatedlist):
+
+        self.current_moveable_pieces = updatedlist
+
     def get_team(self):
 
         if self.isblack:
@@ -61,7 +71,7 @@ class Player:
 
         print("Appending " + str(endpiece))
         self.currentpieces.append(endpiece)
-        print(self.currentpieces)
+        print("After appending: " + str(self.currentpieces))
 
     def printcurrentpieces(self):
         print(self.currentpieces)
@@ -76,21 +86,6 @@ class Player:
         else:
             return False
 
-class MiniMaxPlayer(Player):
-
-    def __init__(self, isBlack, player_type):
-        Player.__init__(self, isBlack, player_type)
-        self.terminal_state = self.terminal_moveable_pieces_state()
-
-
-    def max(self):
-        pass
-
-    def min(self):
-        pass
-
-
-
 class RandomPlayer(Player):
 
     def __init__(self, isBlack, player_type):
@@ -98,13 +93,10 @@ class RandomPlayer(Player):
         Player.__init__(self, isBlack, player_type)
         self.chosen_piece = None
         self.chosen_piece_move_to = None
-        print("Init random player " + str(self.isblack))
-        print(self.currentpieces)
 
     def choose_random_start_position(self):
 
-        self.chosen_piece = random.choice(self.currentpieces)
-
+        self.chosen_piece = random.choice(self.current_moveable_pieces)
         return self.chosen_piece
 
 

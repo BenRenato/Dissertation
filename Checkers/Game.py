@@ -5,7 +5,9 @@ from Checkers.Move import Move as move
 import random
 from time import sleep
 from sys import exit
-
+import gym
+import gym.envs
+import gym_checkers
 
 class Game():
 
@@ -41,6 +43,8 @@ class Game():
         # TODO clean this up, it's gross. Add input validation.
         while 1:
 
+            if self.check_terminal_state():
+                exit("No moves left for a player.")
             print(str(self.current_turn) + " turn: \n")
 
             # Player input
@@ -75,20 +79,23 @@ class Game():
 
                 self.piece_move_to = self.current_turn.choose_random_end_position(self.piece_to_move.copy())
 
-                sleep(1)
-
-            elif self.player1.player_type == "human" and self.player2.player_type == "CPU":
-                print("Human vs AI Agent")
+            elif self.player1.player_type == "random" and self.player2.player_type == "CPU":
+                print("Random vs AI Agent")
+                env = gym.make('checkers-v0')
+                env.init_env_vars(self.board, self.player2)
+                env.step(print("Env stepping"))
+                env.render()
+                env.reset()
                 exit(1)
 
-            move_to_make = move(self.piece_to_move, self.piece_move_to, self.current_turn)
+            move_to_make = move(self.piece_to_move, self.piece_move_to, self.current_turn, 1)
             if move_to_make.makemove(self.board):
 
                 self.update_current_pieces_for_non_turn_player()
+                self.board.printboard()
+                self.update_moveable_pieces()
                 self.update_current_turn()
                 print("\n")
-                self.board.printboard()
-                #sleep(0.5)
             else:
                 pass
 
@@ -98,10 +105,49 @@ class Game():
         else:
             self.player1.remove_taken_piece(self.piece_move_to)
 
-    def update_moveable_piece_this_turn(self):
-        #TODO update if moveable
-        pass
+    def update_moveable_pieces(self):
 
+        current_black_pieces_on_board = self.player1.get_current_pieces()  # player 1 is black
+        current_white_pieces_on_board = self.player2.get_current_pieces()  # player 2 is white
+
+        black_moveable_pieces = []
+        white_moveable_pieces = []
+
+        deltaPositionsBlack = [[-1, -1], [1, -1]]
+        deltaPositionsWhite = [[-1, 1], [1, 1]]
+
+        for coord in current_black_pieces_on_board:
+            # (horizontalPos, verticalPos)
+            for i in range(2):
+                tempEndPosition = [a + b for a, b in zip(coord, deltaPositionsBlack[i])]
+                isMoveable = move(coord, tempEndPosition, self.player1, 0)
+                #print(coord, tempEndPosition)
+                if isMoveable.makemove(self.board):
+                    #print("Moveable piece found")
+                    black_moveable_pieces.append(coord)
+                    break
+                else:
+                    continue
+
+        for coord in current_white_pieces_on_board:
+            # (horizontalPos, verticalPos)
+            for i in range(2):
+                tempEndPosition = [a + b for a, b in zip(coord, deltaPositionsWhite[i])]
+                #print(coord, tempEndPosition)
+                isMoveable = move(coord, tempEndPosition, self.player2, 0)
+                if isMoveable.makemove(self.board):
+                    #print("Moveable piece found")
+                    white_moveable_pieces.append(coord)
+                    break
+                else:
+                    continue
+
+        self.player1.update_moveable_pieces(black_moveable_pieces.copy())
+        self.player2.update_moveable_pieces(white_moveable_pieces.copy())
+        #print("Black moves: " + str(self.player1.get_current_moveable_pieces()))
+        #print("White moves: " + str(self.player2.get_current_moveable_pieces()))
+        #print("Current black pieces :" + str(self.player1.get_current_pieces()))
+        #print("Current white pieces :" + str(self.player2.get_current_pieces()))
 
     def update_current_turn(self):
 
@@ -110,6 +156,18 @@ class Game():
         else:
             self.current_turn = self.player1
 
-    def check_row_behind_moved_piece(self):
-        #TODO check if moved piece freed up other pieces to move
-        pass
+    def check_terminal_state(self):
+        if self.player1.get_number_of_current_moveable_pieces() == 0 or self.player2.get_number_of_current_moveable_pieces() == 0:
+            return True
+        #call caluclate game state
+        #more points = win
+
+    def get_player(self, player):
+
+        if player == 1:
+            return self.player1
+        else:
+            return self.player2
+
+    def get_boardstate(self):
+        return self.board

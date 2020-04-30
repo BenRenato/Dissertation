@@ -2,10 +2,11 @@ from Checkers.Enums import Team, Direction
 
 class Move:
 
-    def __init__(self, startposition, endposition, player):
+    def __init__(self, startposition, endposition, player, update):
         self.startposition = startposition
         self.endposition = endposition
         self.player = player
+        self.updatenow = update
 
     def makemove(self, boardstate):
 
@@ -15,12 +16,13 @@ class Move:
             return False
 
         if self.validatemove(board):
-            print("Valid move")
-            self.updatepiece(board, self.startposition, self.endposition)
-            self.player.updatecurrentpieces(self.startposition, self.endposition)
+            #print("Valid move")
+            if self.updatenow == 1:
+                self.updatepiece(board, self.startposition, self.endposition)
+                self.player.updatecurrentpieces(self.startposition, self.endposition)
             return True
         else:
-            print("Invalid move")
+            #print("Invalid move")
             return False
 
     def validatemove(self, board):
@@ -29,13 +31,13 @@ class Move:
             if board[self.endposition].getoccupier().team == Team.EMPTY:
                 return True
             elif board[self.endposition].getoccupier().team != self.player.get_team():
-                print("Validating taking move")
+                #print("Validating taking move")
                 if self.validate_taking_move(board):
                     return True
                 else:
                     return False
             else:
-                print("Cannot take same team piece")
+                #print("Cannot take same team piece")
                 return False
 
 
@@ -66,10 +68,10 @@ class Move:
             return False
 
         if board[end_position_of_jump].getoccupier().team == Team.EMPTY:
-
-            print("Updating taken piece")
-            self.removepiece(board, self.endposition)
-            self.endposition = end_position_of_jump
+            if self.updatenow == 1:
+                print("Updating taken piece")
+                self.removepiece(board, self.endposition)
+                self.endposition = end_position_of_jump
             #TODO update amount of pieces Player class captured here
             #self.player.update_captured_pieces(1) to increase count by 1
             return True
@@ -108,7 +110,7 @@ class Move:
     def validate_movement_correct(self):
         # Move in correct direction
         if self.player.isblack:
-            print(self.startposition, self.endposition)
+            #print(self.startposition, self.endposition)
             if abs(self.startposition[0] - self.endposition[0]) != 1 \
                     or (self.startposition[1] - self.endposition[1]) != 1:
                 return False
@@ -116,7 +118,7 @@ class Move:
                 return True
 
         else:
-            print(self.startposition, self.endposition)
+            #print(self.startposition, self.endposition)
             if abs(self.startposition[0] - self.endposition[0]) != 1 \
                     or (self.startposition[1] - self.endposition[1]) != -1:
                 return False
@@ -146,8 +148,13 @@ class Move:
             return False
 
         if board[self.startposition].getoccupier().team == Team.EMPTY:
-            print(str(self.player.currentpieces))
+            #print(str(self.player.currentpieces))
+            print(self.player)
+            board.printboard()
             print("Specificed piece doesn't exist")
             return False
         else:
             return True
+
+    def __repr__(self):
+        return "Positions " + str(self.startposition + self.endposition)
