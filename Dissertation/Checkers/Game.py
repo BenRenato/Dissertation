@@ -5,7 +5,9 @@ from Checkers.Move import Move as move
 import random
 from time import sleep
 from sys import exit
-
+import gym
+import gym.envs
+import gym_checkers
 
 class Game():
 
@@ -41,6 +43,8 @@ class Game():
         # TODO clean this up, it's gross. Add input validation.
         while 1:
 
+            if self.check_terminal_state():
+                exit("No moves left for a player.")
             print(str(self.current_turn) + " turn: \n")
 
             # Player input
@@ -75,8 +79,13 @@ class Game():
 
                 self.piece_move_to = self.current_turn.choose_random_end_position(self.piece_to_move.copy())
 
-            elif self.player1.player_type == "human" and self.player2.player_type == "CPU":
-                print("Human vs AI Agent")
+            elif self.player1.player_type == "random" and self.player2.player_type == "CPU":
+                print("Random vs AI Agent")
+                env = gym.make('checkers-v0')
+                env.init_env_vars(self.board, self.player2)
+                env.step(print("Env stepping"))
+                env.render()
+                env.reset()
                 exit(1)
 
             move_to_make = move(self.piece_to_move, self.piece_move_to, self.current_turn, 1)
@@ -87,8 +96,6 @@ class Game():
                 self.update_moveable_pieces()
                 self.update_current_turn()
                 print("\n")
-
-
             else:
                 pass
 
@@ -148,3 +155,19 @@ class Game():
             self.current_turn = self.player2
         else:
             self.current_turn = self.player1
+
+    def check_terminal_state(self):
+        if self.player1.get_number_of_current_moveable_pieces() == 0 or self.player2.get_number_of_current_moveable_pieces() == 0:
+            return True
+        #call caluclate game state
+        #more points = win
+
+    def get_player(self, player):
+
+        if player == 1:
+            return self.player1
+        else:
+            return self.player2
+
+    def get_boardstate(self):
+        return self.board

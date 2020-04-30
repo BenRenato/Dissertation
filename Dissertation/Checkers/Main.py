@@ -1,8 +1,6 @@
 from Checkers.Game import Game
 import cProfile
-import gym
-import gym.envs
-import gym_checkers
+
 #TODO REINSTALL CUSTOM ENV WHEN CHANGING CHECKERSENV FUNCS
 
 #TODO Standardise variable casing to Pythonic convention
@@ -16,7 +14,7 @@ def main():
           "1. Player vs Player\n" +
               "2. Random CPU vs Random CPU\n" +
                        "3. Player vs Random CPU\n" +
-                       "4. Human vs AI agent\n"))
+                       "4. Random vs AI agent\n"))
 
     if choice == 1:
         game = Game("human", "human")
@@ -32,9 +30,8 @@ def main():
 
     if choice == 4:
 
-        env = gym.make('checkers-v0')
-        env.step(print("Env stepping"))
-        env.reset()
+        game = Game("random", "CPU")
+        game.run()
         
 
 if __name__ == "__main__":
