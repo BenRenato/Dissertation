@@ -2,7 +2,6 @@ from Checkers.CheckerBoard import CheckerBoard as checkboard
 from Checkers.Player import Player as player
 from Checkers.Player import RandomPlayer as randplayer
 from Checkers.Move import Move as move
-from Checkers.Enums import Player_Types as pt
 import random
 from time import sleep
 from sys import exit
@@ -16,21 +15,20 @@ class Game():
 
         self.board = checkboard(8, 8)
 
-        #Player 1
-        if player1_type == pt.HUMAN:
-            self.player1 = player(True, pt.HUMAN)
-        elif player1_type == pt.AI:
-            self.player1 = player(True, pt.AI)
-        elif player1_type == pt.RANDOM:
-            self.player1 = randplayer(True, pt.RANDOM)
+        # TODO clean up, make them Enums
+        if player1_type == "human":
+            self.player1 = player(True, "human")
+        elif player1_type == "CPU":
+            self.player1 = player(True, "CPU")
+        elif player1_type == "random":
+            self.player1 = randplayer(True, "random")
 
-        #Player 2
-        if player2_type == pt.HUMAN:
-            self.player2 = player(False, pt.HUMAN)
-        elif player2_type == pt.AI:
-            self.player2 = player(True, pt.AI)
-        elif player2_type == pt.RANDOM:
-            self.player2 = randplayer(False, pt.RANDOM)
+        if player2_type == "human":
+            self.player2 = player(False, "human")
+        elif player2_type == "CPU":
+            self.player2 = player(True, "CPU")
+        elif player2_type == "random":
+            self.player2 = randplayer(False, "random")
 
         self.piece_to_move = None
         self.piece_move_to = None
@@ -42,57 +40,64 @@ class Game():
 
         self.current_turn = random.choice([self.player1, self.player2])
 
+        # TODO clean this up, it's gross. Add input validation.
         while 1:
 
             if self.check_terminal_state():
-                #TODO pass current state and give "winner"
                 exit("No moves left for a player.")
-
             print(str(self.current_turn) + " turn: \n")
 
             # Player input
-            if self.player1.player_type == pt.HUMAN and self.player2.player_type == pt.HUMAN:
-                self.take_player_input()
+            if self.player1.player_type == "human" and self.player2.player_type == "human":
+                self.piece_to_move = input("Piece to move? Format: x, y ")
+                self.piece_move_to = input("Move to where? Format: x, y \n'exit' to exit: ")
 
                 # Turn coords into keys
                 while True:
                     try:
-                        self.check_if_exit()
-                        self.input_to_coordinates()
+
+                        if self.piece_move_to.lower() == 'exit':
+                            exit(1)
+
+                        self.piece_to_move = [int(s) for s in self.piece_to_move.split(',')]
+                        self.piece_move_to = [int(s) for s in self.piece_move_to.split(',')]
+
                     # TODO should probably change exception to ValueError, TypeError etc for performance reasons
                     except Exception:
                         print("Wrong format")
-                        self.take_player_input()
+                        self.piece_to_move = input("Piece to move? Format: x, y  ")
+                        self.piece_move_to = input("Move to where? Format: x, y  ")
                         continue
                     else:
                         break
+            elif self.player1.player_type == "human" and self.player2.player_type == "random":
+                print("Human vs Random")
+                exit(1)
+            elif self.player1.player_type == "random" and self.player2.player_type == "random":
 
-            elif self.player1.player_type == pt.RANDOM and self.player2.player_type == pt.RANDOM:
+                self.piece_to_move = self.current_turn.choose_random_start_position()
 
-                self.get_random_move()
+                self.piece_move_to = self.current_turn.choose_random_end_position(self.piece_to_move.copy())
 
-            elif self.player1.player_type == pt.RANDOM and self.player2.player_type == pt.AI:
-
-                self.agent_vs_random_loop()
+            elif self.player1.player_type == "random" and self.player2.player_type == "CPU":
+                print("Random vs AI Agent")
+                env = gym.make('checkers-v0')
+                env.init_env_vars(self.board, self.player2)
+                env.step(print("Env stepping"))
+                env.render()
+                env.reset()
+                exit(1)
 
             move_to_make = move(self.piece_to_move, self.piece_move_to, self.current_turn, 1)
-
             if move_to_make.makemove(self.board):
 
-                self.update_game_after_move()
-
+                self.update_current_pieces_for_non_turn_player()
+                self.board.printboard()
+                self.update_moveable_pieces()
+                self.update_current_turn()
+                print("\n")
             else:
                 pass
-
-
-    def agent_vs_random_loop(self):
-        print("Random vs AI Agent")
-        env = gym.make('checkers-v0')
-        env.init_env_vars(self.board, self.player2)
-        env.step(print("Env stepping"))
-        env.render()
-        env.reset()
-        exit(1)
 
     def update_current_pieces_for_non_turn_player(self):
         if self.current_turn == self.player1:
@@ -113,7 +118,6 @@ class Game():
 
         for coord in current_black_pieces_on_board:
             # (horizontalPos, verticalPos)
-            #TODO METHODIFY THIS
             for i in range(2):
                 tempEndPosition = [a + b for a, b in zip(coord, deltaPositionsBlack[i])]
                 isMoveable = move(coord, tempEndPosition, self.player1, 0)
@@ -140,22 +144,10 @@ class Game():
 
         self.player1.update_moveable_pieces(black_moveable_pieces.copy())
         self.player2.update_moveable_pieces(white_moveable_pieces.copy())
-
-    def input_to_coordinates(self):
-
-        self.piece_to_move = [int(s) for s in self.piece_to_move.split(',')]
-        self.piece_move_to = [int(s) for s in self.piece_move_to.split(',')]
-
-    def get_random_move(self):
-
-        self.piece_to_move = self.current_turn.choose_random_start_position()
-        self.piece_move_to = self.current_turn.choose_random_end_position(self.piece_to_move.copy())
-
-    def check_if_exit(self):
-        if self.piece_move_to.lower() == 'exit':
-            exit(1)
-        else:
-            return
+        #print("Black moves: " + str(self.player1.get_current_moveable_pieces()))
+        #print("White moves: " + str(self.player2.get_current_moveable_pieces()))
+        #print("Current black pieces :" + str(self.player1.get_current_pieces()))
+        #print("Current white pieces :" + str(self.player2.get_current_pieces()))
 
     def update_current_turn(self):
 
@@ -179,14 +171,3 @@ class Game():
 
     def get_boardstate(self):
         return self.board
-
-    def take_player_input(self):
-        self.piece_to_move = input("Piece to move? Format: x, y ")
-        self.piece_move_to = input("Move to where? Format: x, y \n'exit' to exit: ")
-
-    def update_game_after_move(self):
-        self.update_current_pieces_for_non_turn_player()
-        self.board.printboard()
-        self.update_moveable_pieces()
-        self.update_current_turn()
-        print("\n")

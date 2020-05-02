@@ -2,7 +2,7 @@ from Checkers.Enums import Team, Direction
 
 class Move:
 
-    def __init__(self, startposition, endposition, player, update=0):
+    def __init__(self, startposition, endposition, player, update):
         self.startposition = startposition
         self.endposition = endposition
         self.player = player

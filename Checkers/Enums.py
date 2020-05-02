@@ -16,8 +16,3 @@ class Direction(Enum):
     DOWN = "down"
     LEFT = "left"
     RIGHT = "right"
-
-class Player_Types(Enum):
-    HUMAN = "human"
-    AI = "ai"
-    RANDOM = "random"

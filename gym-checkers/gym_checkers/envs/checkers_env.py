@@ -31,8 +31,6 @@ class CheckersEnv(gym.Env):
         self.agent = None
         self.current_state = None
         self.action_value_pairs = []
-        self.games_played = 0
-
         print("Gym init")
 
     def step(self, action):
@@ -53,23 +51,16 @@ class CheckersEnv(gym.Env):
         for piece in self.agent.get_current_moveable_pieces():
             pass
 
-
-    def value_from_policy(self):
-        pass
-
-
-
-
     def update_action_value_pairs(self):
 
         leftward = [-1, -1]
         rightward = [1, -1]
 
         for piece in self.agent.get_current_moveable_pieces():
-            new_leftward_position = [x + y for x, y in zip(piece, leftward)]  # new leftward movement position
-            self.append_action_value_pair(piece, new_leftward_position)
-            new_rightward_position = [x + y for x, y in zip(piece, rightward)]  # new rightward movement position
-            self.append_action_value_pair(piece, new_rightward_position)
+            new_leftward_position = [x + y for x, y in zip(piece, leftward)] #new leftward movement position
+            self.action_value_pairs.append(Action_Value_Pair(Move(piece, new_leftward_position, self.agent, 1), 0))
+            new_rightward_position = [x + y for x, y in zip(piece, rightward)] #new rightward movement position
+            self.action_value_pairs.append(Action_Value_Pair(Move(piece, new_rightward_position, self.agent, 1), 0))
 
     def calculate_move_value(self, board):
         pass
@@ -86,9 +77,3 @@ class CheckersEnv(gym.Env):
     def init_env_vars(self, board, player):
         self.set_current_state(board)
         self.set_player(player)
-
-    def append_action_value_pair(self, old_position, new_position):
-        if new_position[0] > 0 and new_position[1] > 0:
-            self.action_value_pairs.append(Action_Value_Pair(Move(old_position, new_position, self.agent, 1), 0))
-        else:
-            return
