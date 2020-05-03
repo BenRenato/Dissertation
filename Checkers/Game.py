@@ -29,6 +29,7 @@ class Game():
             self.player2 = player(False, pt.HUMAN)
         elif player2_type == pt.AI:
             self.player2 = player(True, pt.AI)
+            self.env = gym.make('checkers-v0')
         elif player2_type == pt.RANDOM:
             self.player2 = randplayer(False, pt.RANDOM)
 
@@ -73,7 +74,7 @@ class Game():
 
             elif self.player1.player_type == pt.RANDOM and self.player2.player_type == pt.AI:
 
-                self.agent_vs_random_loop()
+                self.agent_vs_random_loop_init()
 
             move_to_make = move(self.piece_to_move, self.piece_move_to, self.current_turn, 1)
 
@@ -84,15 +85,24 @@ class Game():
             else:
                 pass
 
-
-    def agent_vs_random_loop(self):
+    def agent_vs_random_loop_init(self):
         print("Random vs AI Agent")
-        env = gym.make('checkers-v0')
-        env.init_env_vars(self.board, self.player2)
-        env.step(print("Env stepping"))
-        env.render()
-        env.reset()
-        exit(1)
+
+        self.env.init_env_vars(self.board, self.player2)
+
+        self.agent_loop()
+
+    def agent_loop(self):
+
+        while 1:
+
+            agent_move = self.env.calculate_best_move()
+
+            self.env.step(agent_move)
+            self.env.render()
+
+
+
 
     def update_current_pieces_for_non_turn_player(self):
         if self.current_turn == self.player1:

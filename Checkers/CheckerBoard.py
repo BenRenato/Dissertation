@@ -15,6 +15,9 @@ class CheckerBoard:
         x, y = key
         return self._board[x][y]
 
+    def __eq__(self, other):
+        return self._board == other
+
     def printboard(self):
         for row in zip(*self._board):
             print("".join(str(row)))
