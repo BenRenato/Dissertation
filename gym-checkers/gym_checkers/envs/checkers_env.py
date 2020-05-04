@@ -3,7 +3,7 @@ from gym import error, spaces, utils
 from gym.utils import seeding
 import numpy as np
 from Checkers.Game import Game
-import random as rand
+from Checkers.Enums import Team
 from Checkers.Move import Move
 from gym_checkers.envs.action_value_pair import Action_Value_Pair
 from copy import deepcopy
@@ -57,14 +57,71 @@ class CheckersEnv(gym.Env):
         if self.games_played == 0:
             action = rand.choice(self.action_value_pairs)
             return action.get_action()
+        #elif (something that looks at past state and then checks new states, compares and sees whats best move)
         else:
-            #TODO
-            return rand.choice(self.action_value_pairs).geta_action()
+            possible_action_values = []
+
+            for pair in self.get_action_value_pairs():
+                temp_state = deepcopy(self.current_state)
+                action_to_evaluate = pair.get_action()
+                action_to_evaluate.makemove(temp_state)
+
+                state_value = self.state_value_from_policy(temp_state)
+
+                possible_action_values.append(Action_Value_Pair(action_to_evaluate, state_value))
+
+                #TODO pick best state_action_value pair from possible_action_values
 
 
-    def value_from_policy(self, state):
-        #calculate state value from policy
-        pass
+
+
+
+
+            #TODO make copy of current state, make a move, use policy on new state to deternmine how good move was
+            #TODO add action_pair to temp_best_pair list, update as new move is better, return the best move
+
+    # Ve = (A2 − A1) + (B2 − B1) + (C1 − C2)
+    # Ai = squared sum distance to other side for player i
+    # Bi = squared sum distance to centre for all pieces of player i
+    # Ci = the sum of maximum vertical advanced for all pieces e.g lower score for pieces near start of board
+
+
+    def state_value_from_policy(self, state):
+
+        #[0] = column
+        #[1] = row
+
+        state_value = 0
+        sum_of_distance_to_centre = 0
+
+        for i in range(state.get_x()):
+            for j in range (state.get_y()):
+                if state[i][j].getoccupier().Team == Team.BLACK:
+                    pass
+                    #TODO get value of piece and update sum calculate_distance_from_centre()
+
+
+
+        return state_value
+    
+
+
+    def calculate_distance_from_centre(self, x_position):
+
+        #find difference between index and centre
+        #if difference is 0, it's at centre, then take difference of that, 4 = high value at center
+
+
+
+        if x_position == 0 or x_position == 7:
+            return -1
+        elif x_position == 1 or x_position == 6:
+            return 1
+        elif x_position == 2 or x_position == 5:
+            return 2
+        elif x_position == 3 or x_position == 4:
+            return 3
+
 
     def update_action_value_pairs(self):
 

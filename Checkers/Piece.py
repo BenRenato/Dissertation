@@ -12,3 +12,6 @@ class Piece:
 
     def __repr__(self):
         return self.team
+
+    def __eq__(self, other):
+        return self.team == other.team

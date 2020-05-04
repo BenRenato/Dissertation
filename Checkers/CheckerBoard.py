@@ -42,3 +42,9 @@ class CheckerBoard:
 
                     # Set odd space black checkers
                     self._board[i][6].updateoccupier("black", "basic")
+
+    def get_x(self):
+        return self.width
+
+    def get_y(self):
+        return self.height
