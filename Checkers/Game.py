@@ -18,24 +18,25 @@ class Game():
 
         #Player 1
         if player1_type == pt.HUMAN:
-            self.player1 = player(True, pt.HUMAN)
+            self.player1 = player(False, pt.HUMAN)
         elif player1_type == pt.AI:
-            self.player1 = player(True, pt.AI)
+            self.player1 = player(False, pt.AI)
         elif player1_type == pt.RANDOM:
-            self.player1 = randplayer(True, pt.RANDOM)
+            self.player1 = randplayer(False, pt.RANDOM)
 
         #Player 2
         if player2_type == pt.HUMAN:
-            self.player2 = player(False, pt.HUMAN)
+            self.player2 = player(True, pt.HUMAN)
         elif player2_type == pt.AI:
             self.player2 = player(True, pt.AI)
             self.env = gym.make('checkers-v0')
         elif player2_type == pt.RANDOM:
-            self.player2 = randplayer(False, pt.RANDOM)
+            self.player2 = randplayer(True, pt.RANDOM)
 
         self.piece_to_move = None
         self.piece_move_to = None
         self.current_turn = None
+        self.init_agent = True
 
     def run(self):
         self.board.setupdefaultboard()
@@ -74,7 +75,17 @@ class Game():
 
             elif self.player1.player_type == pt.RANDOM and self.player2.player_type == pt.AI:
 
-                self.agent_vs_random_loop_init()
+                if self.init_agent:
+                    self.agent_vs_random_loop_init()
+                    self.init_agent = False
+
+                if self.current_turn == self.player2:
+                    agent_choice = self.agent_move_and_update()
+                    self.piece_to_move = agent_choice.get_start_position()
+                    self.piece_move_to = agent_choice.get_end_position()
+
+                elif self.current_turn == self.player1:
+                    self.get_random_move()
 
             move_to_make = move(self.piece_to_move, self.piece_move_to, self.current_turn, 1)
 
@@ -83,26 +94,20 @@ class Game():
                 self.update_game_after_move()
 
             else:
-                pass
+                print("Move didn't finish")
 
     def agent_vs_random_loop_init(self):
         print("Random vs AI Agent")
 
         self.env.init_env_vars(self.board, self.player2)
 
-        self.agent_loop()
+    def agent_move_and_update(self):
 
-    def agent_loop(self):
+        agent_move = self.env.calculate_best_move()
 
-        while 1:
+        self.env.step(agent_move)
 
-            agent_move = self.env.calculate_best_move()
-
-            self.env.step(agent_move)
-            self.env.render()
-
-
-
+        return agent_move
 
     def update_current_pieces_for_non_turn_player(self):
         if self.current_turn == self.player1:
@@ -112,8 +117,8 @@ class Game():
 
     def update_moveable_pieces(self):
 
-        current_black_pieces_on_board = self.player1.get_current_pieces()  # player 1 is black
-        current_white_pieces_on_board = self.player2.get_current_pieces()  # player 2 is white
+        current_black_pieces_on_board = self.player2.get_current_pieces()  # player 2 is black
+        current_white_pieces_on_board = self.player1.get_current_pieces()  # player 1 is white
 
         black_moveable_pieces = []
         white_moveable_pieces = []
@@ -126,7 +131,7 @@ class Game():
             #TODO METHODIFY THIS
             for i in range(2):
                 tempEndPosition = [a + b for a, b in zip(coord, deltaPositionsBlack[i])]
-                isMoveable = move(coord, tempEndPosition, self.player1, 0)
+                isMoveable = move(coord, tempEndPosition, self.player2, 0)
                 #print(coord, tempEndPosition)
                 if isMoveable.makemove(self.board):
                     #print("Moveable piece found")
@@ -140,7 +145,7 @@ class Game():
             for i in range(2):
                 tempEndPosition = [a + b for a, b in zip(coord, deltaPositionsWhite[i])]
                 #print(coord, tempEndPosition)
-                isMoveable = move(coord, tempEndPosition, self.player2, 0)
+                isMoveable = move(coord, tempEndPosition, self.player1, 0)
                 if isMoveable.makemove(self.board):
                     #print("Moveable piece found")
                     white_moveable_pieces.append(coord)
@@ -148,8 +153,8 @@ class Game():
                 else:
                     continue
 
-        self.player1.update_moveable_pieces(black_moveable_pieces.copy())
-        self.player2.update_moveable_pieces(white_moveable_pieces.copy())
+        self.player1.update_moveable_pieces(white_moveable_pieces.copy())
+        self.player2.update_moveable_pieces(black_moveable_pieces.copy())
 
     def input_to_coordinates(self):
 
@@ -175,6 +180,10 @@ class Game():
             self.current_turn = self.player1
 
     def check_terminal_state(self):
+
+        if self.player1 is None or self.player2 is None:
+            return False
+
         if self.player1.get_number_of_current_moveable_pieces() == 0 or self.player2.get_number_of_current_moveable_pieces() == 0:
             return True
         #call caluclate game state

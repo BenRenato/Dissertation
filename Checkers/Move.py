@@ -156,5 +156,11 @@ class Move:
         else:
             return True
 
+    def get_start_position(self):
+        return self.startposition
+
+    def get_end_position(self):
+        return self.endposition
+
     def __repr__(self):
         return "Positions " + str(self.startposition + self.endposition)
