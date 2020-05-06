@@ -44,6 +44,9 @@ class Game():
 
         self.current_turn = random.choice([self.player1, self.player2])
 
+        #TODO change the game logic for each type of game to a method so we dont have to check
+        #TODO the player types every turn
+
         while 1:
 
             if self.check_terminal_state():
@@ -87,10 +90,14 @@ class Game():
                     #TODO to the original board
 
                     self.env.step(self.agent_move_and_update())
+                    self.update_game_after_move()
+                    self.player2.printcurrentpieces()
+                    sleep(1)
 
                 elif self.current_turn == self.player1:
                     self.get_random_move()
                     self.send_move_request()
+                    sleep(1)
 
     def send_move_request(self):
 
@@ -109,10 +116,12 @@ class Game():
     def agent_move_and_update(self):
 
         agent_move = self.env.calculate_best_move()
+        agent_move.set_update_pieces_value(1)
 
         return agent_move
 
     def update_current_pieces_for_non_turn_player(self):
+
         if self.current_turn == self.player1:
             self.player2.remove_taken_piece(self.piece_move_to)
         else:
@@ -135,9 +144,7 @@ class Game():
             for i in range(2):
                 tempEndPosition = [a + b for a, b in zip(coord, deltaPositionsBlack[i])]
                 isMoveable = move(coord, tempEndPosition, self.player2, 0)
-                #print(coord, tempEndPosition)
                 if isMoveable.makemove(self.board):
-                    #print("Moveable piece found")
                     black_moveable_pieces.append(coord)
                     break
                 else:
@@ -147,17 +154,15 @@ class Game():
             # (horizontalPos, verticalPos)
             for i in range(2):
                 tempEndPosition = [a + b for a, b in zip(coord, deltaPositionsWhite[i])]
-                #print(coord, tempEndPosition)
                 isMoveable = move(coord, tempEndPosition, self.player1, 0)
                 if isMoveable.makemove(self.board):
-                    #print("Moveable piece found")
                     white_moveable_pieces.append(coord)
                     break
                 else:
                     continue
 
-        self.player1.update_moveable_pieces(white_moveable_pieces.copy())
-        self.player2.update_moveable_pieces(black_moveable_pieces.copy())
+        self.player1.update_moveable_pieces(white_moveable_pieces)
+        self.player2.update_moveable_pieces(black_moveable_pieces)
 
     def input_to_coordinates(self):
 
@@ -190,8 +195,6 @@ class Game():
 
         if self.player1.get_number_of_current_moveable_pieces() == 0 or self.player2.get_number_of_current_moveable_pieces() == 0:
             return True
-        #call caluclate game state
-        #more points = win
 
     def get_player(self, player):
 

@@ -74,7 +74,7 @@ class Player:
         print("After appending: " + str(self.currentpieces))
 
     def printcurrentpieces(self):
-        print(self.currentpieces)
+        print(sorted(self.currentpieces))
 
     def get_number_of_current_moveable_pieces(self):
         return len(self.current_moveable_pieces)

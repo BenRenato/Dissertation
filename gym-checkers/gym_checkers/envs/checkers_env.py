@@ -45,7 +45,7 @@ class CheckersEnv(gym.Env):
 
     def step(self, action):
 
-        #TODO THE BUG IS CAUSED BY THIS UPDATING THE PLAYER2 CURRENT PIECES, MAKE DEEPCOPY OF PLAYER AS WELL
+        #TODO SOMETHING WRONG WITH ACTION VALUE PAIR START POSITIONS, THEY ARE RETURNING AS UNSPECIFIED STARTING POSITIONS
         action.makemove(self.current_state)
 
         print("Gym step")
@@ -54,7 +54,7 @@ class CheckersEnv(gym.Env):
         print("Gym reset")
 
     def render(self, mode='human', close=False):
-        self.current_state.printboard()
+        #self.current_state.printboard()
         print("Gym render")
 
     def calculate_best_move(self):
@@ -203,8 +203,7 @@ class CheckersEnv(gym.Env):
         leftward = [-1, -1]
         rightward = [1, -1]
 
-        print(self.player_agent.get_current_moveable_pieces())
-        sleep(5)
+        #print(self.player_agent.get_current_moveable_pieces())
 
         for piece in self.player_agent.get_current_moveable_pieces():
             new_leftward_position = [x + y for x, y in zip(piece, leftward)]  # new leftward movement position

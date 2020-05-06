@@ -150,9 +150,6 @@ class Move:
             return False
 
         if board[self.startposition].getoccupier().team == Team.EMPTY:
-            #print(str(self.player.currentpieces))
-            print(self.player)
-            board.printboard()
             print("Specificed piece doesn't exist")
             return False
         else:
@@ -163,6 +160,9 @@ class Move:
 
     def get_end_position(self):
         return self.endposition
+
+    def set_update_pieces_value(self, update_pieces):
+        self.update_pieces = update_pieces
 
     def __repr__(self):
         return "Positions " + str(self.startposition + self.endposition)
