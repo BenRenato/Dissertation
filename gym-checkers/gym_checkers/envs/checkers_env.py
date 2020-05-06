@@ -1,3 +1,5 @@
+from time import sleep
+
 import gym
 from gym import error, spaces, utils
 from gym.utils import seeding
@@ -43,7 +45,9 @@ class CheckersEnv(gym.Env):
 
     def step(self, action):
 
+        #TODO THE BUG IS CAUSED BY THIS UPDATING THE PLAYER2 CURRENT PIECES, MAKE DEEPCOPY OF PLAYER AS WELL
         action.makemove(self.current_state)
+
         print("Gym step")
 
     def reset(self):
@@ -59,6 +63,15 @@ class CheckersEnv(gym.Env):
         # TODO change this to evaluate if current_state == anything in self.state_action_value_pairs
         # TODO if not found, pick random move, then add move + state + value after moving to self.state_action_value_pairs
 
+        for pair in self.get_action_value_pairs():
+            temp_state = deepcopy(self.current_state)
+            action_to_evaluate = pair.get_action()
+            action_to_evaluate.makemove(temp_state)
+
+            state_value = self.state_value_from_policy(temp_state)
+
+            possible_action_values.append(Action_Value_Pair(action_to_evaluate, state_value))
+
         if self.games_played == 0 or rand.randint(0, 1) > self.epsilon_greedy_value:
             action = rand.choice(self.action_value_pairs)
             return action.get_action()
@@ -67,15 +80,6 @@ class CheckersEnv(gym.Env):
 
         if matching_state is not None:
             possible_action_values.append(matching_state.get_action_pair())
-        else:
-            for pair in self.get_action_value_pairs():
-                temp_state = deepcopy(self.current_state)
-                action_to_evaluate = pair.get_action()
-                action_to_evaluate.makemove(temp_state)
-
-                state_value = self.state_value_from_policy(temp_state)
-
-                possible_action_values.append(Action_Value_Pair(action_to_evaluate, state_value))
 
         best_move = self.evaluate_best_move(possible_action_values)
 
@@ -127,12 +131,12 @@ class CheckersEnv(gym.Env):
         # TODO clean up please future Ben
         for i in range(state.get_x()):
             for j in range(state.get_y()):
-                if state[i][j].getoccupier().Team == Team.BLACK:
+                if state[i, j].getoccupier().team == Team.BLACK:
                     black_sum_distance_to_other_side += self.calculate_distance_to_other_side(j, Team.BLACK)
                     black_sum_of_distance_to_centre += self.calculate_distance_from_centre(i)
                     black_counters_on_board += 1
 
-                elif state[i][j].getoccupier().Team == Team.WHITE:
+                elif state[i, j].getoccupier().team == Team.WHITE:
                     white_sum_distance_to_other_side += self.calculate_distance_to_other_side(j, Team.WHITE)
                     white_sum_distance_to_centre += self.calculate_distance_from_centre(i)
                     white_counters_on_board += 1
@@ -199,6 +203,9 @@ class CheckersEnv(gym.Env):
         leftward = [-1, -1]
         rightward = [1, -1]
 
+        print(self.player_agent.get_current_moveable_pieces())
+        sleep(5)
+
         for piece in self.player_agent.get_current_moveable_pieces():
             new_leftward_position = [x + y for x, y in zip(piece, leftward)]  # new leftward movement position
             self.append_action_value_pair(piece, new_leftward_position)
@@ -224,6 +231,6 @@ class CheckersEnv(gym.Env):
 
     def append_action_value_pair(self, old_position, new_position):
         if new_position[0] > 0 and new_position[1] > 0:
-            self.action_value_pairs.append(Action_Value_Pair(Move(old_position, new_position, self.player_agent, 1), 1))
+            self.action_value_pairs.append(Action_Value_Pair(Move(old_position, new_position, self.player_agent, 1, 0), 1))
         else:
             return

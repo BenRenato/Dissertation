@@ -2,7 +2,8 @@ from Checkers.Enums import Team, Direction
 
 class Move:
 
-    def __init__(self, startposition, endposition, player, update=0):
+    def __init__(self, startposition, endposition, player, update=0, update_pieces=0):
+        self.update_pieces = update_pieces
         self.startposition = startposition
         self.endposition = endposition
         self.player = player
@@ -19,7 +20,8 @@ class Move:
             #print("Valid move")
             if self.updatenow == 1:
                 self.updatepiece(board, self.startposition, self.endposition)
-                self.player.updatecurrentpieces(self.startposition, self.endposition)
+                if self.update_pieces == 1:
+                    self.player.updatecurrentpieces(self.startposition, self.endposition)
             return True
         else:
             #print("Invalid move")

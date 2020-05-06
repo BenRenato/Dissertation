@@ -61,6 +61,7 @@ class Game():
                     try:
                         self.check_if_exit()
                         self.input_to_coordinates()
+                        self.send_move_request()
                     # TODO should probably change exception to ValueError, TypeError etc for performance reasons
                     except Exception:
                         print("Wrong format")
@@ -72,6 +73,7 @@ class Game():
             elif self.player1.player_type == pt.RANDOM and self.player2.player_type == pt.RANDOM:
 
                 self.get_random_move()
+                self.send_move_request()
 
             elif self.player1.player_type == pt.RANDOM and self.player2.player_type == pt.AI:
 
@@ -80,21 +82,24 @@ class Game():
                     self.init_agent = False
 
                 if self.current_turn == self.player2:
-                    agent_choice = self.agent_move_and_update()
-                    self.piece_to_move = agent_choice.get_start_position()
-                    self.piece_move_to = agent_choice.get_end_position()
+                    #TODO dont copy board or player done, move move_to_make.makemove below to own method and add where necessary above
+                    #TODO send the best move to env.step(self.env.calculate_best_move()), then have step() act upon the reference
+                    #TODO to the original board
+
+                    self.env.step(self.agent_move_and_update())
 
                 elif self.current_turn == self.player1:
                     self.get_random_move()
+                    self.send_move_request()
 
-            move_to_make = move(self.piece_to_move, self.piece_move_to, self.current_turn, 1)
+    def send_move_request(self):
 
-            if move_to_make.makemove(self.board):
+        move_request = move(self.piece_to_move, self.piece_move_to, self.current_turn, 1, 1)
 
-                self.update_game_after_move()
-
-            else:
-                print("Move didn't finish")
+        if move_request.makemove(self.board):
+            self.update_game_after_move()
+        else:
+            print("Move failed")
 
     def agent_vs_random_loop_init(self):
         print("Random vs AI Agent")
@@ -104,8 +109,6 @@ class Game():
     def agent_move_and_update(self):
 
         agent_move = self.env.calculate_best_move()
-
-        self.env.step(agent_move)
 
         return agent_move
 
@@ -158,6 +161,7 @@ class Game():
 
     def input_to_coordinates(self):
 
+        #TODO try catch here
         self.piece_to_move = [int(s) for s in self.piece_to_move.split(',')]
         self.piece_move_to = [int(s) for s in self.piece_move_to.split(',')]
 
