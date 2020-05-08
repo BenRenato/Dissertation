@@ -223,7 +223,7 @@ class CheckersEnv:
         return self.action_value_pairs
 
     def append_action_value_pair(self, old_position, new_position):
-        if new_position[0] > 0 and new_position[1] > 0:
+        if new_position[0] >= 0 and new_position[1] >= 0:
             self.action_value_pairs.append(
                 Action_Value_Pair(Move(old_position, new_position, self.player_agent, 1, 0), 1))
         else:

@@ -47,8 +47,16 @@ class Game:
         while 1:
 
             if self.check_terminal_state():
-                # TODO pass current state and give "winner"
-                exit("No moves left for a player.")
+                # TODO pass current state and give "winner", then reset loop if pt.AI
+                if self.player1.get_number_of_pieces_on_board() > self.player2.get_number_of_pieces_on_board():
+                    print("White wins!")
+                    exit("\nGame over!")
+                elif self.player1.get_number_of_pieces_on_board() == self.player2.get_number_of_pieces_on_board():
+                    print("Tie game!")
+                    exit("\nGame over!")
+                elif self.player1.get_number_of_pieces_on_board() < self.player2.get_number_of_pieces_on_board():
+                    print("Black wins!")
+                    exit("\nGame over!")
 
             print(str(self.current_turn) + " turn: \n")
 
@@ -82,16 +90,10 @@ class Game:
                     self.init_agent = False
 
                 if self.current_turn == self.player2:
-                    # TODO dont copy board or player done, move move_to_make.makemove below to own method and add where necessary above
-                    # TODO send the best move to env.step(self.env.calculate_best_move()), then have step() act upon the reference
-                    # TODO to the original board
-                    #print("Board before calling agent_move_and_update()\n")
-                    #self.board.printboard()
-                    #self.player2.printcurrentpieces()
+
+
                     agent_selected_move = self.agent_move_and_update()
-                    #print("Board after calling agent_move_and_update()\n")
-                    #self.board.printboard()
-                    #self.player2.printcurrentpieces()
+
                     self.piece_to_move = agent_selected_move.get_start_position()
                     self.piece_move_to = agent_selected_move.get_end_position()
 
@@ -100,14 +102,10 @@ class Game:
                     else:
                         print(agent_selected_move)
                         print("AI move request failed. Possible bug in action_value movement")
-                        sleep(10)
-
-                    sleep(1)
 
                 elif self.current_turn == self.player1:
                     self.get_random_move()
                     self.send_move_request()
-                    sleep(1)
 
     def send_move_request(self):
 

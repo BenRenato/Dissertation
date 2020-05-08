@@ -47,6 +47,9 @@ class Player:
     def get_current_pieces(self):
         return self.currentpieces
 
+    def get_number_of_pieces_on_board(self):
+        return len(self.currentpieces)
+
     def update_moveable_pieces(self, updatedlist):
 
         self.current_moveable_pieces = updatedlist
