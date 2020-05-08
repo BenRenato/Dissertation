@@ -38,15 +38,10 @@ class CheckersEnv:
 
         print("Gym init")
 
-    def step(self, action):
-
-        # TODO something wrong with the moves being selected, some moves are being marked as "Possible" and being taken by the AI
-        # TODO when really they are not possible. e.g trying to move own piece onto another owned piece. Check
-        # TODO how it validates possible moves in Move class and how action_value_pairs are made. Maybe when checking the
-        # TODO pairs after update_action_value_pairs() we are not removing the ones that are not possible.
-        action.makemove(self.current_state)
-
-        print("Gym step")
+    # TODO something wrong with the moves being selected, some moves are being marked as "Possible" and being taken by the AI
+    # TODO when really they are not possible. e.g trying to move own piece onto another owned piece. Check
+    # TODO how it validates possible moves in Move class and how action_value_pairs are made. Maybe when checking the
+    # TODO pairs after update_action_value_pairs() we are not removing the ones that are not possible.
 
     def calculate_best_move(self):
 
@@ -59,11 +54,12 @@ class CheckersEnv:
         for pair in self.get_action_value_pairs():
             temp_state = deepcopy(self.current_state)
             action_to_evaluate = pair.get_action()
-            action_to_evaluate.makemove(temp_state)
 
-            state_value = self.state_value_from_policy(temp_state)
-
-            possible_action_values.append(Action_Value_Pair(action_to_evaluate, state_value))
+            if action_to_evaluate.makemove(temp_state):
+                state_value = self.state_value_from_policy(temp_state)
+                possible_action_values.append(Action_Value_Pair(action_to_evaluate, state_value))
+            else:
+                pass
 
         if self.games_played == 0 or rand.random() > self.epsilon_greedy_value:
             action = rand.choice(possible_action_values)

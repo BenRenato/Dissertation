@@ -41,6 +41,9 @@ class Player:
     def get_current_moveable_pieces(self):
         return self.current_moveable_pieces
 
+    def get_player_type(self):
+        return self.player_type
+
     def get_current_pieces(self):
         return self.currentpieces
 

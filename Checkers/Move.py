@@ -1,4 +1,4 @@
-from Checkers.Enums import Team, Direction
+from Checkers.Enums import Team, Direction, Player_Types
 
 class Move:
 
@@ -70,7 +70,11 @@ class Move:
                     print("Updating taken piece")
 
                 self.removepiece(board, self.endposition)
-                self.endposition = end_position_of_jump
+                if self.player.get_player_type() != Player_Types.AI:
+                    self.endposition = end_position_of_jump
+                else:
+                    pass
+
             #TODO update amount of pieces Player class captured here
             #self.player.update_captured_pieces(1) to increase count by 1
             return True
