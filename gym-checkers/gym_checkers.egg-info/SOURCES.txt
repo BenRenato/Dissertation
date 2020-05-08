@@ -1,6 +1,0 @@
-README.md
-gym_checkers.egg-info/PKG-INFO
-gym_checkers.egg-info/SOURCES.txt
-gym_checkers.egg-info/dependency_links.txt
-gym_checkers.egg-info/requires.txt
-gym_checkers.egg-info/top_level.txt

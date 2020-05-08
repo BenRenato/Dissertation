@@ -1,20 +1,15 @@
 from time import sleep
 
-import gym
-from gym import error, spaces, utils
-from gym.utils import seeding
-import numpy as np
-from Checkers.Game import Game
 from Checkers.Enums import Team
 from Checkers.Move import Move
-from gym_checkers.envs.state_action_pair import State_Action_Pair
-from gym_checkers.envs.action_value_pair import Action_Value_Pair
+from Checkers_Agent.state_action_pair import State_Action_Pair
+from Checkers_Agent.action_value_pair import Action_Value_Pair
 from copy import deepcopy
 import random as rand
 from math import exp
 
 
-class CheckersEnv(gym.Env):
+class CheckersEnv:
     metadata = {'render.modes': ['human']}
 
     # Ve =  α(A2 − A1) +  α(B2 − B1) +  α(C1 - C2)
@@ -152,9 +147,8 @@ class CheckersEnv(gym.Env):
 
     def calculate_policy_with_current_values(self, a1, a2, b1, b2, c1, c2):
         # Ve =  α(A2 − A1) +  α(B2 − B1) +  α(C1 - C2)
-        alpha = self.learning_rate
 
-        return alpha * (exp(a2) - exp(a1)) + alpha * (exp(b2) - exp(b1)) + alpha * (c1 - c2)
+        return (a2 - a1) + (b2 - b1) + (c1 - c2)
 
     def calculate_distance_to_other_side(self, y_position, side):
 
@@ -190,7 +184,7 @@ class CheckersEnv(gym.Env):
         # if difference is 0, it's at centre, then take difference of that, 4 = high value at center
 
         if x_position == 0 or x_position == 7:
-            return -1.0
+            return 0.0
         elif x_position == 1 or x_position == 6:
             return 1.0
         elif x_position == 2 or x_position == 5:
