@@ -3,33 +3,30 @@ from Checkers.Player import Player as player
 from Checkers.Player import RandomPlayer as randplayer
 from Checkers.Move import Move as move
 from Checkers.Enums import Player_Types as pt
+from Checkers_Agent.checkers_env import CheckersEnv as env
 import random
 from time import sleep
 from sys import exit
-import gym
-import gym.envs
-import gym_checkers
 
-class Game():
+
+class Game:
 
     def __init__(self, player1_type, player2_type):
 
         self.board = checkboard(8, 8)
 
-        #Player 1
+        # Player 1
         if player1_type == pt.HUMAN:
             self.player1 = player(False, pt.HUMAN)
-        elif player1_type == pt.AI:
-            self.player1 = player(False, pt.AI)
         elif player1_type == pt.RANDOM:
             self.player1 = randplayer(False, pt.RANDOM)
 
-        #Player 2
+        # Player 2
         if player2_type == pt.HUMAN:
             self.player2 = player(True, pt.HUMAN)
         elif player2_type == pt.AI:
             self.player2 = player(True, pt.AI)
-            self.env = gym.make('checkers-v0')
+            self.env = env()
         elif player2_type == pt.RANDOM:
             self.player2 = randplayer(True, pt.RANDOM)
 
@@ -44,13 +41,13 @@ class Game():
 
         self.current_turn = random.choice([self.player1, self.player2])
 
-        #TODO change the game logic for each type of game to a method so we dont have to check
-        #TODO the player types every turn
+        # TODO change the game logic for each type of game to a method so we dont have to check
+        # TODO the player types every turn
 
         while 1:
 
             if self.check_terminal_state():
-                #TODO pass current state and give "winner"
+                # TODO pass current state and give "winner"
                 exit("No moves left for a player.")
 
             print(str(self.current_turn) + " turn: \n")
@@ -85,13 +82,26 @@ class Game():
                     self.init_agent = False
 
                 if self.current_turn == self.player2:
-                    #TODO dont copy board or player done, move move_to_make.makemove below to own method and add where necessary above
-                    #TODO send the best move to env.step(self.env.calculate_best_move()), then have step() act upon the reference
-                    #TODO to the original board
+                    # TODO dont copy board or player done, move move_to_make.makemove below to own method and add where necessary above
+                    # TODO send the best move to env.step(self.env.calculate_best_move()), then have step() act upon the reference
+                    # TODO to the original board
+                    #print("Board before calling agent_move_and_update()\n")
+                    #self.board.printboard()
+                    #self.player2.printcurrentpieces()
+                    agent_selected_move = self.agent_move_and_update()
+                    #print("Board after calling agent_move_and_update()\n")
+                    #self.board.printboard()
+                    #self.player2.printcurrentpieces()
+                    self.piece_to_move = agent_selected_move.get_start_position()
+                    self.piece_move_to = agent_selected_move.get_end_position()
 
-                    self.env.step(self.agent_move_and_update())
-                    self.update_game_after_move()
-                    self.player2.printcurrentpieces()
+                    if self.send_move_request():
+                        pass
+                    else:
+                        print(agent_selected_move)
+                        print("AI move request failed. Possible bug in action_value movement")
+                        sleep(10)
+
                     sleep(1)
 
                 elif self.current_turn == self.player1:
@@ -105,8 +115,10 @@ class Game():
 
         if move_request.makemove(self.board):
             self.update_game_after_move()
+            return True
         else:
             print("Move failed")
+            return False
 
     def agent_vs_random_loop_init(self):
         print("Random vs AI Agent")
@@ -140,7 +152,7 @@ class Game():
 
         for coord in current_black_pieces_on_board:
             # (horizontalPos, verticalPos)
-            #TODO METHODIFY THIS
+            # TODO METHODIFY THIS
             for i in range(2):
                 tempEndPosition = [a + b for a, b in zip(coord, deltaPositionsBlack[i])]
                 isMoveable = move(coord, tempEndPosition, self.player2, 0)
@@ -166,7 +178,7 @@ class Game():
 
     def input_to_coordinates(self):
 
-        #TODO try catch here
+        # TODO try catch here
         self.piece_to_move = [int(s) for s in self.piece_to_move.split(',')]
         self.piece_move_to = [int(s) for s in self.piece_move_to.split(',')]
 

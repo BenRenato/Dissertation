@@ -40,23 +40,21 @@ class CheckersEnv:
 
     def step(self, action):
 
-        #TODO SOMETHING WRONG WITH ACTION VALUE PAIR START POSITIONS, THEY ARE RETURNING AS UNSPECIFIED STARTING POSITIONS
+        # TODO something wrong with the moves being selected, some moves are being marked as "Possible" and being taken by the AI
+        # TODO when really they are not possible. e.g trying to move own piece onto another owned piece. Check
+        # TODO how it validates possible moves in Move class and how action_value_pairs are made. Maybe when checking the
+        # TODO pairs after update_action_value_pairs() we are not removing the ones that are not possible.
         action.makemove(self.current_state)
 
         print("Gym step")
-
-    def reset(self):
-        print("Gym reset")
-
-    def render(self, mode='human', close=False):
-        #self.current_state.printboard()
-        print("Gym render")
 
     def calculate_best_move(self):
 
         possible_action_values = []
         # TODO change this to evaluate if current_state == anything in self.state_action_value_pairs
         # TODO if not found, pick random move, then add move + state + value after moving to self.state_action_value_pairs
+
+        self.update_action_value_pairs()
 
         for pair in self.get_action_value_pairs():
             temp_state = deepcopy(self.current_state)
@@ -67,8 +65,8 @@ class CheckersEnv:
 
             possible_action_values.append(Action_Value_Pair(action_to_evaluate, state_value))
 
-        if self.games_played == 0 or rand.randint(0, 1) > self.epsilon_greedy_value:
-            action = rand.choice(self.action_value_pairs)
+        if self.games_played == 0 or rand.random() > self.epsilon_greedy_value:
+            action = rand.choice(possible_action_values)
             return action.get_action()
 
         matching_state = next((x for x in self.state_action_value_pairs if self.current_state == x.get_state()), None)
@@ -82,8 +80,7 @@ class CheckersEnv:
 
         return best_move.get_action()
 
-
-    #Ignore PyCharm suggesting static method, we don't want to call this without a class instance
+    # Ignore PyCharm suggesting static method, we don't want to call this without a class instance
     def evaluate_best_move(self, moves):
 
         best_move_so_far = None
@@ -94,6 +91,9 @@ class CheckersEnv:
                 best_move_so_far = move
             elif move.get_value() > best_move_so_far.get_value():
                 best_move_so_far = move
+            elif move.get_value() == best_move_so_far.get_value():
+                if rand.randint(0, 1) == 1:
+                    best_move_so_far = move
 
         return best_move_so_far
 
@@ -197,7 +197,8 @@ class CheckersEnv:
         leftward = [-1, -1]
         rightward = [1, -1]
 
-        #print(self.player_agent.get_current_moveable_pieces())
+        self.reset_action_value_pairs()
+        # print(self.player_agent.get_current_moveable_pieces())
 
         for piece in self.player_agent.get_current_moveable_pieces():
             new_leftward_position = [x + y for x, y in zip(piece, leftward)]  # new leftward movement position
@@ -214,16 +215,20 @@ class CheckersEnv:
     def set_current_state(self, board):
         self.current_state = board
 
+    def reset_action_value_pairs(self):
+        self.action_value_pairs = []
+
     def init_env_vars(self, board, player):
         self.set_current_state(board)
         self.set_player(player)
-        self.update_action_value_pairs()
+        #self.update_action_value_pairs()
 
     def get_action_value_pairs(self):
         return self.action_value_pairs
 
     def append_action_value_pair(self, old_position, new_position):
         if new_position[0] > 0 and new_position[1] > 0:
-            self.action_value_pairs.append(Action_Value_Pair(Move(old_position, new_position, self.player_agent, 1, 0), 1))
+            self.action_value_pairs.append(
+                Action_Value_Pair(Move(old_position, new_position, self.player_agent, 1, 0), 1))
         else:
             return

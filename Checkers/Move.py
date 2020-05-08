@@ -53,25 +53,22 @@ class Move:
 
         #TODO method-ify this
         if direction_vertical == Direction.UP:
-            print("UP")
             end_position_of_jump[1] -= 1
         elif direction_vertical == Direction.DOWN:
-            print("DOWN")
             end_position_of_jump[1] += 1
         if direction_horizontal == Direction.LEFT:
-            print("LEFT")
             end_position_of_jump[0] -= 1
         elif direction_horizontal == Direction.RIGHT:
-            print("RIGHT")
             end_position_of_jump[0] += 1
 
         if not self.check_position_out_of_bounds(end_position_of_jump):
-            print("Checking OOB jump move")
             return False
 
         if board[end_position_of_jump].getoccupier().team == Team.EMPTY:
             if self.updatenow == 1:
-                print("Updating taken piece")
+                if self.update_pieces == 1:
+                    print("Updating taken piece")
+
                 self.removepiece(board, self.endposition)
                 self.endposition = end_position_of_jump
             #TODO update amount of pieces Player class captured here
