@@ -68,8 +68,7 @@ class Move:
             if self.updatenow == 1:
                 if self.update_pieces == 1:
                     print("Updating taken piece")
-
-                self.removepiece(board, self.endposition)
+                    self.removepiece(board, self.endposition)
                 if self.player.get_player_type() != Player_Types.AI:
                     self.endposition = end_position_of_jump
                 else:

@@ -97,11 +97,13 @@ class Game:
                     self.piece_to_move = agent_selected_move.get_start_position()
                     self.piece_move_to = agent_selected_move.get_end_position()
 
+                    self.player2.printcurrentpieces()
                     if self.send_move_request():
                         pass
                     else:
+                        self.player2.printcurrentpieces()
                         print(agent_selected_move)
-                        print("AI move request failed. Possible bug in action_value movement")
+                        exit("AI failed a move.")
 
                 elif self.current_turn == self.player1:
                     self.get_random_move()
@@ -111,6 +113,7 @@ class Game:
 
         move_request = move(self.piece_to_move, self.piece_move_to, self.current_turn, 1, 1)
 
+        print("Attemping: " + str(move_request))
         if move_request.makemove(self.board):
             self.update_game_after_move()
             return True

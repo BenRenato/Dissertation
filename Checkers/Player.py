@@ -70,14 +70,14 @@ class Player:
 
     def updatecurrentpieces(self, startpiece, endpiece):
 
-        print("Removing " + str(self.currentpieces[self.currentpieces.index(startpiece)]))
-        print("Before removal " + str(sorted(self.currentpieces)))
+        #print("Removing " + str(self.currentpieces[self.currentpieces.index(startpiece)]))
+        #print("Before removal " + str(sorted(self.currentpieces)))
         self.currentpieces.remove(self.currentpieces[self.currentpieces.index(startpiece)])
-        print("After removal " + str(sorted(self.currentpieces)))
+        #print("After removal " + str(sorted(self.currentpieces)))
 
-        print("Appending " + str(endpiece))
+        #print("Appending " + str(endpiece))
         self.currentpieces.append(endpiece)
-        print("After appending: " + str(sorted(self.currentpieces)))
+        #print("After appending: " + str(sorted(self.currentpieces)))
 
     def printcurrentpieces(self):
         print(sorted(self.currentpieces))

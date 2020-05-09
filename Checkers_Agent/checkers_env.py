@@ -10,8 +10,6 @@ from math import exp
 
 
 class CheckersEnv:
-    metadata = {'render.modes': ['human']}
-
     # Ve =  α(A2 − A1) +  α(B2 − B1) +  α(C1 - C2)
     # Ai = squared sum distance to other side for player i
     # Bi = squared sum distance to centre for all pieces of player i
@@ -29,7 +27,7 @@ class CheckersEnv:
     def __init__(self):
 
         self.state_action_value_pairs = []
-        self.epsilon_greedy_value = 0.1  # 0.1 = 10% of the time pick a random action, 90% time greedy
+        self.epsilon_greedy_value = 0.2  # 0.2 = 10% of the time pick a random action, 90% time greedy (rand.random can only produce 0.1-1.0)
         self.learning_rate = 1.0  # 1 = harsh punishments/big rewards. 0.1 = small punishments and small rewards
         self.player_agent = None
         self.current_state = None
@@ -61,27 +59,32 @@ class CheckersEnv:
             else:
                 pass
 
-        if self.games_played == 0 or rand.random() > self.epsilon_greedy_value:
+
+        #TODO make this check work, as before it was appending garbage to possible_actions_values and making bugs
+        #matching_state = next((x for x in self.state_action_value_pairs if self.current_state == x.get_state()), None)
+
+        #if matching_state is not None:
+         #   possible_action_values.append(matching_state.get_action_pair())
+        #else:
+         #   pass
+
+        if rand.random() < self.epsilon_greedy_value:
             action = rand.choice(possible_action_values)
             return action.get_action()
 
-        matching_state = next((x for x in self.state_action_value_pairs if self.current_state == x.get_state()), None)
-
-        if matching_state is not None:
-            possible_action_values.append(matching_state.get_action_pair())
 
         best_move = self.evaluate_best_move(possible_action_values)
 
-        self.state_action_value_pairs.append(State_Action_Pair(self.current_state, best_move.get_action()))
+        self.state_action_value_pairs.append(State_Action_Pair(self.current_state, best_move))
 
         return best_move.get_action()
 
     # Ignore PyCharm suggesting static method, we don't want to call this without a class instance
-    def evaluate_best_move(self, moves):
+    def evaluate_best_move(self, action_pairs):
 
         best_move_so_far = None
 
-        for move in moves:
+        for move in action_pairs:
 
             if best_move_so_far is None:
                 best_move_so_far = move
@@ -223,7 +226,7 @@ class CheckersEnv:
         return self.action_value_pairs
 
     def append_action_value_pair(self, old_position, new_position):
-        if new_position[0] >= 0 and new_position[1] >= 0:
+        if 0 <= new_position[0] < 8 and 0 <= new_position[1] < 8:
             self.action_value_pairs.append(
                 Action_Value_Pair(Move(old_position, new_position, self.player_agent, 1, 0), 1))
         else:
