@@ -52,7 +52,6 @@ class CheckersEnv:
             else:
                 pass
 
-        # TODO check this works once you implement constant new games
         matching_action_pair = self.check_state_seen_before()
 
         if matching_action_pair is not None:
@@ -64,21 +63,24 @@ class CheckersEnv:
 
         best_move = self.evaluate_best_move(possible_action_values)
 
-        self.state_action_value_pairs.append(State_Action_Pair(deepcopy(self.current_state), best_move))
+        if matching_action_pair is None:
+            self.state_action_value_pairs.append(State_Action_Pair(deepcopy(self.current_state.get_board()), best_move))
 
         return best_move.get_action()
 
     def check_state_seen_before(self):
 
-        for state_action_pair in self.state_action_value_pairs:
-            if self.current_state.compare_board_with_state_action_pair(state_action_pair):
-                print("##### FOUND STATE PREVIOUSLY ####")
-                sleep(2)
-                return state_action_pair.get_action_pair()
+        if self.state_action_value_pairs:
 
-        else:
-            print("No previous state found.")
-            return None
+            for pair in self.state_action_value_pairs:
+                if pair.compare_to_current_board(self.current_state.get_board()):
+                    print("##### FOUND STATE PREVIOUSLY ####")
+                    return pair.get_action_pair()
+
+            else:
+                print("No previous state found.")
+                return None
+
 
         # Ignore PyCharm suggesting static method, we don't want to call this without a class instance
 
@@ -286,3 +288,7 @@ class CheckersEnv:
             self.games_lost += 1
         elif outcome.TIE:
             pass
+
+    def get_current_state_action_value_pairs(self):
+
+        return self.state_action_value_pairs

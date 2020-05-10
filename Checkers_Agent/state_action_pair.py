@@ -13,11 +13,20 @@ class State_Action_Pair:
     def get_action_pair(self):
         return self.action_value_pair
 
+    def compare_to_current_board(self, current_board):
+
+        if self.state == current_board:
+            return True
+        else:
+            return False
+
     def __str__(self):
-        pass
+
+        return "State :" + self.state + "Value : " + str(self.action_value_pair.get_value())
 
     def __repr__(self):
-        pass
+
+        return "State :" + self.state + "Value : " + str(self.action_value_pair.get_value())
 
     def __eq__(self, other):
         return self.state == other

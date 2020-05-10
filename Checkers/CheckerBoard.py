@@ -15,14 +15,9 @@ class CheckerBoard:
         x, y = key
         return self._board[x][y]
 
-    def __eq__(self, other):
-        return self._board == other
+    def __repr__(self):
 
-    def compare_board_with_state_action_pair(self, state_action_pair):
-        if self._board == state_action_pair.get_state():
-            return True
-        else:
-            return False
+        return str(self._board)
 
     def printboard(self):
         for row in zip(*self._board):
@@ -54,3 +49,6 @@ class CheckerBoard:
 
     def get_y(self):
         return self.height
+
+    def get_board(self):
+        return self._board

@@ -47,8 +47,6 @@ class Game:
 
         #TODO perform heustistics, change values of pairs, then play again, repeat until x amount of games, print WR, policy weights, etc after each game
 
-        #TODO checkers_env isn't finding the state after the first game, possible bug with reset of game board
-
         while 1:
 
             if self.check_terminal_state():
