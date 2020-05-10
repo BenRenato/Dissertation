@@ -21,3 +21,9 @@ class Player_Types(Enum):
     HUMAN = "human"
     AI = "ai"
     RANDOM = "random"
+
+class Outcome(Enum):
+
+    WIN = 1
+    TIE = 0
+    LOSE = -1

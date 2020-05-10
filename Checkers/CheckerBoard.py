@@ -24,7 +24,6 @@ class CheckerBoard:
         else:
             return False
 
-
     def printboard(self):
         for row in zip(*self._board):
             print("".join(str(row)))

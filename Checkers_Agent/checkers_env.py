@@ -1,6 +1,6 @@
 from time import sleep
 
-from Checkers.Enums import Team
+from Checkers.Enums import Team, Outcome
 from Checkers.Move import Move
 from Checkers_Agent.state_action_pair import State_Action_Pair
 from Checkers_Agent.action_value_pair import Action_Value_Pair
@@ -33,8 +33,8 @@ class CheckersEnv:
         self.current_state = None
         self.action_value_pairs = []
         self.games_played = 0
-
-        print("Gym init")
+        self.games_won = 0
+        self.games_lost = 0
 
     def calculate_best_move(self):
 
@@ -52,7 +52,7 @@ class CheckersEnv:
             else:
                 pass
 
-        #TODO check this works once you implement constant new games
+        # TODO check this works once you implement constant new games
         matching_action_pair = self.check_state_seen_before()
 
         if matching_action_pair is not None:
@@ -72,7 +72,10 @@ class CheckersEnv:
 
         for state_action_pair in self.state_action_value_pairs:
             if self.current_state.compare_board_with_state_action_pair(state_action_pair):
+                print("##### FOUND STATE PREVIOUSLY ####")
+                sleep(2)
                 return state_action_pair.get_action_pair()
+
         else:
             print("No previous state found.")
             return None
@@ -121,10 +124,9 @@ class CheckersEnv:
 
         white_counters_on_board = 0
 
-        #Di
+        # Di
 
         black_furthest_back_piece = 0
-
 
         # TODO clean up please future Ben
         for i in range(state.get_x()):
@@ -163,8 +165,8 @@ class CheckersEnv:
         least_advanced_piece_y_axis = None
 
         if len(current_pieces) >= 2:
-            #Wish I had template functions from C++ : - )
-            #It's okay, for i, for j is still most Pythonic  : )
+            # Wish I had template functions from C++ : - )
+            # It's okay, for i, for j is still most Pythonic  : )
             for i in range(state.get_x()):
                 for j in range(state.get_y()):
                     if state[i, j].getoccupier().team == Team.BLACK:
@@ -183,7 +185,7 @@ class CheckersEnv:
 
     def calculate_policy_with_current_values(self, a1, a2, b1, b2, c1, c2, d1):
         # Ve =  α(A2 − A1) +  α(B2 − B1) +  α(C1 - C2)
-        #TODO tune the math here, maybe not factorial, could be square or just double etc
+        # TODO tune the math here, maybe not factorial, could be square or just double etc
 
         try:
             d1 = factorial(d1)
@@ -264,7 +266,7 @@ class CheckersEnv:
     def init_env_vars(self, board, player):
         self.set_current_state(board)
         self.set_player(player)
-        # self.update_action_value_pairs()
+        self.reset_action_value_pairs()
 
     def get_action_value_pairs(self):
         return self.action_value_pairs
@@ -275,3 +277,12 @@ class CheckersEnv:
                 Action_Value_Pair(Move(old_position, new_position, self.player_agent, 1, 0), 1))
         else:
             return
+
+    def update_games_and_win_or_lose(self, outcome):
+        self.games_played += 1
+        if outcome.WIN:
+            self.games_won += 1
+        elif outcome.LOSE:
+            self.games_lost += 1
+        elif outcome.TIE:
+            pass

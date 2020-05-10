@@ -10,11 +10,20 @@ class Player:
         self.current_moveable_pieces = []
 
         #set current moveable pieces for each side
-        if isBlack:
-            self.current_moveable_pieces = [[0, 5], [2, 5], [4, 5], [6, 5]]
-        else:
-            self.current_moveable_pieces = [[1, 2], [3, 2], [5, 2], [7, 2]]
 
+        self.init_player_vars()
+
+
+    def init_player_vars(self):
+        self.init_current_moveable_pieces()
+
+        self.init_current_pieces_on_board()
+
+    def init_current_pieces_on_board(self):
+
+        #TODO change this to a hard coded set of pieces like init_current_moveable_pieces
+
+        self.currentpieces.clear()
 
         for i in range(8):
             if i % 2 == 0:
@@ -31,6 +40,16 @@ class Player:
                 else:
                     self.currentpieces.append([i, 0])
                     self.currentpieces.append([i, 2])
+
+
+    def init_current_moveable_pieces(self):
+
+
+
+        if self.isblack:
+            self.current_moveable_pieces = [[0, 5], [2, 5], [4, 5], [6, 5]]
+        else:
+            self.current_moveable_pieces = [[1, 2], [3, 2], [5, 2], [7, 2]]
 
     def __str__(self):
         if self.isblack:
