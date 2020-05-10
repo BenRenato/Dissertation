@@ -44,6 +44,9 @@ class Game:
         # TODO change the game logic for each type of game to a method so we dont have to check
         # TODO the player types every turn
 
+        #TODO create end if game post_heuristics in env, reset checkerboard and player vars, "restart" a new checkers game,
+        #TODO perform heustistics, change values of pairs, then play again, repeat until x amount of games, print WR, policy weights, etc after each game
+
         while 1:
 
             if self.check_terminal_state():

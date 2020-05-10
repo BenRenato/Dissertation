@@ -18,6 +18,13 @@ class CheckerBoard:
     def __eq__(self, other):
         return self._board == other
 
+    def compare_board_with_state_action_pair(self, state_action_pair):
+        if self._board == state_action_pair.get_state():
+            return True
+        else:
+            return False
+
+
     def printboard(self):
         for row in zip(*self._board):
             print("".join(str(row)))

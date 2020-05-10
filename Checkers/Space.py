@@ -13,7 +13,7 @@ class Space:
         return self._OccupiedBy
 
     def __eq__(self, other):
-        return self._OccupiedBy == other
+        return self._OccupiedBy == other.getoccupier()
 
     def __repr__(self):
         if self._OccupiedBy.team == self._OccupiedBy.team.EMPTY:

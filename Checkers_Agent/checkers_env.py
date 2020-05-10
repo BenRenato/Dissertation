@@ -6,7 +6,7 @@ from Checkers_Agent.state_action_pair import State_Action_Pair
 from Checkers_Agent.action_value_pair import Action_Value_Pair
 from copy import deepcopy
 import random as rand
-from math import exp
+from math import exp, factorial
 
 
 class CheckersEnv:
@@ -36,16 +36,9 @@ class CheckersEnv:
 
         print("Gym init")
 
-    # TODO something wrong with the moves being selected, some moves are being marked as "Possible" and being taken by the AI
-    # TODO when really they are not possible. e.g trying to move own piece onto another owned piece. Check
-    # TODO how it validates possible moves in Move class and how action_value_pairs are made. Maybe when checking the
-    # TODO pairs after update_action_value_pairs() we are not removing the ones that are not possible.
-
     def calculate_best_move(self):
 
         possible_action_values = []
-        # TODO change this to evaluate if current_state == anything in self.state_action_value_pairs
-        # TODO if not found, pick random move, then add move + state + value after moving to self.state_action_value_pairs
 
         self.update_action_value_pairs()
 
@@ -59,27 +52,33 @@ class CheckersEnv:
             else:
                 pass
 
+        #TODO check this works once you implement constant new games
+        matching_action_pair = self.check_state_seen_before()
 
-        #TODO make this check work, as before it was appending garbage to possible_actions_values and making bugs
-        #matching_state = next((x for x in self.state_action_value_pairs if self.current_state == x.get_state()), None)
-
-        #if matching_state is not None:
-         #   possible_action_values.append(matching_state.get_action_pair())
-        #else:
-         #   pass
+        if matching_action_pair is not None:
+            possible_action_values.append(matching_action_pair)
 
         if rand.random() < self.epsilon_greedy_value:
             action = rand.choice(possible_action_values)
             return action.get_action()
 
-
         best_move = self.evaluate_best_move(possible_action_values)
 
-        self.state_action_value_pairs.append(State_Action_Pair(self.current_state, best_move))
+        self.state_action_value_pairs.append(State_Action_Pair(deepcopy(self.current_state), best_move))
 
         return best_move.get_action()
 
-    # Ignore PyCharm suggesting static method, we don't want to call this without a class instance
+    def check_state_seen_before(self):
+
+        for state_action_pair in self.state_action_value_pairs:
+            if self.current_state.compare_board_with_state_action_pair(state_action_pair):
+                return state_action_pair.get_action_pair()
+        else:
+            print("No previous state found.")
+            return None
+
+        # Ignore PyCharm suggesting static method, we don't want to call this without a class instance
+
     def evaluate_best_move(self, action_pairs):
 
         best_move_so_far = None
@@ -122,32 +121,77 @@ class CheckersEnv:
 
         white_counters_on_board = 0
 
+        #Di
+
+        black_furthest_back_piece = 0
+
+
         # TODO clean up please future Ben
         for i in range(state.get_x()):
             for j in range(state.get_y()):
                 if state[i, j].getoccupier().team == Team.BLACK:
                     black_sum_distance_to_other_side += self.calculate_distance_to_other_side(j, Team.BLACK)
                     black_sum_of_distance_to_centre += self.calculate_distance_from_centre(i)
+
                     black_counters_on_board += 1
 
                 elif state[i, j].getoccupier().team == Team.WHITE:
                     white_sum_distance_to_other_side += self.calculate_distance_to_other_side(j, Team.WHITE)
                     white_sum_distance_to_centre += self.calculate_distance_from_centre(i)
+
                     white_counters_on_board += 1
 
         # TODO once verified working and merge into return statement
+
+        black_furthest_back_piece = self.calculate_lagging_piece(state)
+
         state_value = self.calculate_policy_with_current_values(black_sum_distance_to_other_side,
                                                                 white_sum_distance_to_other_side
                                                                 , black_sum_of_distance_to_centre,
                                                                 white_sum_distance_to_centre
-                                                                , black_counters_on_board, white_counters_on_board)
-
+                                                                , black_counters_on_board, white_counters_on_board,
+                                                                black_furthest_back_piece)
         return state_value
 
-    def calculate_policy_with_current_values(self, a1, a2, b1, b2, c1, c2):
-        # Ve =  α(A2 − A1) +  α(B2 − B1) +  α(C1 - C2)
+    def calculate_lagging_piece(self, state):
 
-        return (a2 - a1) + (b2 - b1) + (c1 - c2)
+        difference_in_advancement_of_pieces = 0
+
+        current_pieces = self.player_agent.get_current_pieces()
+
+        most_advanced_piece_y_axis = None
+        least_advanced_piece_y_axis = None
+
+        if len(current_pieces) >= 2:
+            #Wish I had template functions from C++ : - )
+            #It's okay, for i, for j is still most Pythonic  : )
+            for i in range(state.get_x()):
+                for j in range(state.get_y()):
+                    if state[i, j].getoccupier().team == Team.BLACK:
+                        if least_advanced_piece_y_axis is None:
+                            least_advanced_piece_y_axis = j
+                        elif j > least_advanced_piece_y_axis:
+                            most_advanced_piece_y_axis = least_advanced_piece_y_axis
+                            least_advanced_piece_y_axis = j
+        else:
+            print("Not enough pieces to perform differential comparison.")
+
+        if least_advanced_piece_y_axis is not None and most_advanced_piece_y_axis is not None:
+            difference_in_advancement_of_pieces += abs(most_advanced_piece_y_axis - least_advanced_piece_y_axis)
+
+        return difference_in_advancement_of_pieces
+
+    def calculate_policy_with_current_values(self, a1, a2, b1, b2, c1, c2, d1):
+        # Ve =  α(A2 − A1) +  α(B2 − B1) +  α(C1 - C2)
+        #TODO tune the math here, maybe not factorial, could be square or just double etc
+
+        try:
+            d1 = factorial(d1)
+        except ValueError:
+            d1 = 0
+            print("Factorial failed, possibly negative.")
+
+        return (a2 - a1) + (b2 - b1) + (c1 - c2) - d1
 
     def calculate_distance_to_other_side(self, y_position, side):
 
@@ -168,7 +212,7 @@ class CheckersEnv:
                 return 0.5
         elif y_position == 6 or y_position == 7:
             if side == Team.BLACK:
-                return 0.0
+                return -0.5
             elif side == Team.WHITE:
                 return 1.0
 
@@ -187,9 +231,9 @@ class CheckersEnv:
         elif x_position == 1 or x_position == 6:
             return 1.0
         elif x_position == 2 or x_position == 5:
-            return 1.0
+            return 1.5
         elif x_position == 3 or x_position == 4:
-            return 2.0
+            return 1.5
 
     def update_action_value_pairs(self):
 
@@ -220,7 +264,7 @@ class CheckersEnv:
     def init_env_vars(self, board, player):
         self.set_current_state(board)
         self.set_player(player)
-        #self.update_action_value_pairs()
+        # self.update_action_value_pairs()
 
     def get_action_value_pairs(self):
         return self.action_value_pairs
