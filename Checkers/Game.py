@@ -19,6 +19,9 @@ class Game:
         # Player 1
         if player1_type == pt.HUMAN:
             self.player1 = player(False, pt.HUMAN)
+        if player1_type == pt.AI:
+            self.player1 = player(False, pt.AI)
+            self.env_white = env()
         elif player1_type == pt.RANDOM:
             self.player1 = randplayer(False, pt.RANDOM)
 
@@ -27,7 +30,7 @@ class Game:
             self.player2 = player(True, pt.HUMAN)
         elif player2_type == pt.AI:
             self.player2 = player(True, pt.AI)
-            self.env = env()
+            self.env_black = env()
         elif player2_type == pt.RANDOM:
             self.player2 = randplayer(True, pt.RANDOM)
 
@@ -50,29 +53,38 @@ class Game:
         while 1:
 
             if self.check_terminal_state():
-                # TODO METHOD-IFY
+                # TODO METHOD-IFY to get type of game, e.g random and ai returns game_type.RAN_AI
                 if self.player1.get_number_of_pieces_on_board() > self.player2.get_number_of_pieces_on_board():
                     print("White wins!")
-                    if self.player2.get_player_type() == pt.AI:
+                    if self.player2.get_player_type() == pt.AI and self.player1.get_player_type() == pt.RANDOM:
                         self.new_random_vs_agent_game(oc.LOSE)
 
-                    if self.player2.get_player_type() != pt.AI:
+                    elif self.player2.get_player_type() == pt.AI and self.player1.get_player_type() == pt.AI:
+                        self.new_agent_vs_agent_game(oc.LOSE, oc.WIN)
+
+                    elif self.player2.get_player_type() != pt.AI and self.player1.get_player_type() != pt.AI:
                         exit("\nGame over!")
 
                 elif self.player1.get_number_of_pieces_on_board() == self.player2.get_number_of_pieces_on_board():
                     print("Tie game!")
-                    if self.player2.get_player_type() == pt.AI:
+                    if self.player2.get_player_type() == pt.AI and self.player1.get_player_type() == pt.RANDOM:
                         self.new_random_vs_agent_game(oc.TIE)
 
-                    if self.player2.get_player_type() != pt.AI:
+                    elif self.player1.get_player_type() == pt.AI and self.player2.get_player_type() == pt.AI:
+                        self.new_agent_vs_agent_game(oc.TIE, oc.TIE)
+
+                    elif self.player2.get_player_type() != pt.AI and self.player1.get_player_type() != pt.AI:
                         exit("\nGame over!")
 
                 elif self.player1.get_number_of_pieces_on_board() < self.player2.get_number_of_pieces_on_board():
                     print("Black wins!")
-                    if self.player2.get_player_type() == pt.AI:
+                    if self.player2.get_player_type() == pt.AI and self.player1.get_player_type() == pt.RANDOM:
                         self.new_random_vs_agent_game(oc.WIN)
 
-                    if self.player2.get_player_type() != pt.AI:
+                    elif self.player1.get_player_type() == pt.AI and self.player2.get_player_type() == pt.AI:
+                        self.new_agent_vs_agent_game(oc.WIN, oc.LOSE)
+
+                    elif self.player2.get_player_type() != pt.AI and self.player1.get_player_type() != pt.AI:
                         exit("\nGame over!")
 
                 if self.player2.get_games_played() == 200:
@@ -81,7 +93,7 @@ class Game:
             print(str(self.current_turn) + " turn: \n")
 
             # Player input
-            if self.player1.player_type == pt.HUMAN and self.player2.player_type == pt.HUMAN:
+            if self.player1.get_player_type() == pt.HUMAN and self.player2.get_player_type() == pt.HUMAN:
                 self.take_player_input()
 
                 # Turn coords into keys
@@ -98,36 +110,80 @@ class Game:
                     else:
                         break
 
-            elif self.player1.player_type == pt.RANDOM and self.player2.player_type == pt.RANDOM:
+            elif self.player1.get_player_type() == pt.RANDOM and self.player2.get_player_type() == pt.RANDOM:
 
                 self.get_random_move()
                 self.send_move_request()
 
-            elif self.player1.player_type == pt.RANDOM and self.player2.player_type == pt.AI:
+            elif self.player1.get_player_type() == pt.RANDOM and self.player2.get_player_type() == pt.AI:
 
                 if self.init_agent:
-                    self.env.init_env_vars(self.board, self.player2)
+                    self.env_black.init_env_vars(self.board, self.player2)
                     self.init_agent = False
 
                 self.random_vs_agent_game()
 
+            elif self.player1.get_player_type() == pt.AI and self.player2.get_player_type() == pt.AI:
+
+                if self.init_agent:
+                    self.env_white.init_env_vars(self.board, self.player1)
+                    self.env_black.init_env_vars(self.board, self.player2)
+                    self.init_agent = False
+
+                self.agent_vs_agent_game()
+
+                #TODO agent vs agent method
+
+
+    def agent_vs_agent_game(self):
+
+        if self.current_turn == self.player1:
+            agent_selected_move = self.agent_move_and_update(self.env_white)
+
+            self.piece_to_move = agent_selected_move.get_start_position()
+            self.piece_move_to = agent_selected_move.get_end_position()
+
+        elif self.current_turn == self.player2:
+
+            agent_selected_move = self.agent_move_and_update(self.env_black)
+
+            self.piece_to_move = agent_selected_move.get_start_position()
+            self.piece_move_to = agent_selected_move.get_end_position()
+
+        if self.send_move_request():
+            pass
+        else:
+            print("Agent move failed for " + str(self.current_turn))
+            print(self.current_turn.printcurrentpieces())
+            exit(1)
+
     def new_random_vs_agent_game(self, outcome):
-        #TODO remember self.init_agent flag
         self.board = checkboard(8, 8)
         self.board.setupdefaultboard()
         self.board.printboard()
         self.current_turn = random.choice([self.player1, self.player2])
         self.player1.init_player_vars()
         self.player2.init_player_vars()
-        self.env.init_env_vars(self.board, self.player2)
-        self.env.update_games_and_win_or_lose(outcome)
+        self.env_black.init_env_vars(self.board, self.player2)
+        self.env_black.update_games_and_win_or_lose(outcome)
 
+    def new_agent_vs_agent_game(self, outcome_black, outcome_white):
+        self.board = checkboard(8, 8)
+        self.board.setupdefaultboard()
+        self.board.printboard()
+        self.current_turn = random.choice([self.player1, self.player2])
+        self.player1.init_player_vars()
+        self.player2.init_player_vars()
+        self.env_black.init_env_vars(self.board, self.player2)
+        self.env_white.init_env_vars(self.board, self.player1)
+        self.env_black.update_games_and_win_or_lose(outcome_black)
+        self.env_white.update_games_and_win_or_lose(outcome_white)
 
     def random_vs_agent_game(self):
 
         if self.current_turn == self.player2:
 
-            agent_selected_move = self.agent_move_and_update()
+            agent_selected_move = self.agent_move_and_update(self.env_black)
 
             self.piece_to_move = agent_selected_move.get_start_position()
             self.piece_move_to = agent_selected_move.get_end_position()
@@ -157,9 +213,9 @@ class Game:
             print("Move failed")
             return False
 
-    def agent_move_and_update(self):
+    def agent_move_and_update(self, env):
 
-        agent_move = self.env.calculate_best_move()
+        agent_move = env.calculate_best_move()
         agent_move.set_update_pieces_value(1)
 
         return agent_move

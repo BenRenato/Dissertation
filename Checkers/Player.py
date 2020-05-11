@@ -1,4 +1,4 @@
-from Checkers import Enums
+from Checkers.Enums import Team, Direction
 import random
 
 
@@ -75,9 +75,9 @@ class Player:
     def get_team(self):
 
         if self.isblack:
-            return Enums.Team.BLACK
+            return Team.BLACK
         else:
-            return Enums.Team.WHITE
+            return Team.WHITE
 
     def remove_taken_piece(self, piece):
 
@@ -146,16 +146,16 @@ class RandomPlayer(Player):
 
         temp_position = start_position
 
-        direction = random.choice([Enums.Direction.RIGHT, Enums.Direction.LEFT])
+        direction = random.choice([Direction.RIGHT, Direction.LEFT])
 
         if self.isblack:
             temp_position[1] -= 1
         else:
             temp_position[1] += 1
 
-        if direction == Enums.Direction.LEFT:
+        if direction == Direction.LEFT:
             temp_position[0] -= 1
-        elif direction == Enums.Direction.RIGHT:
+        elif direction == Direction.RIGHT:
             temp_position[0] += 1
 
         self.chosen_piece_move_to = temp_position

@@ -8,6 +8,7 @@ from copy import deepcopy
 import random as rand
 from math import exp, factorial
 
+#TODO need to make new_agent_vs_agent_game() in game() to accomodate the white agent
 
 class CheckersEnv:
     # Ve =  α(A2 − A1) +  α(B2 − B1) +  α(C1 - C2)
@@ -130,6 +131,8 @@ class CheckersEnv:
 
         black_furthest_back_piece = 0
 
+        white_furthest_back_piece = 0
+
         # TODO clean up please future Ben
         for i in range(state.get_x()):
             for j in range(state.get_y()):
@@ -149,12 +152,14 @@ class CheckersEnv:
 
         black_furthest_back_piece = self.calculate_lagging_piece(state)
 
+        white_furthest_back_piece = self.calculate_lagging_piece(state)
+
         state_value = self.calculate_policy_with_current_values(black_sum_distance_to_other_side,
                                                                 white_sum_distance_to_other_side
                                                                 , black_sum_of_distance_to_centre,
                                                                 white_sum_distance_to_centre
                                                                 , black_counters_on_board, white_counters_on_board,
-                                                                black_furthest_back_piece)
+                                                                white_furthest_back_piece, black_furthest_back_piece)
         return state_value
 
     def calculate_lagging_piece(self, state):
@@ -171,7 +176,7 @@ class CheckersEnv:
             # It's okay, for i, for j is still most Pythonic  : )
             for i in range(state.get_x()):
                 for j in range(state.get_y()):
-                    if state[i, j].getoccupier().team == Team.BLACK:
+                    if state[i, j].getoccupier().team == self.player_agent.get_team():
                         if least_advanced_piece_y_axis is None:
                             least_advanced_piece_y_axis = j
                         elif j > least_advanced_piece_y_axis:
@@ -185,17 +190,23 @@ class CheckersEnv:
 
         return difference_in_advancement_of_pieces
 
-    def calculate_policy_with_current_values(self, a1, a2, b1, b2, c1, c2, d1):
+    def calculate_policy_with_current_values(self, a1, a2, b1, b2, c1, c2, d1, d2):
         # Ve =  α(A2 − A1) +  α(B2 − B1) +  α(C1 - C2)
         # TODO tune the math here, maybe not factorial, could be square or just double etc
 
         try:
+            d2 = factorial(d2)
             d1 = factorial(d1)
         except ValueError:
             d1 = 0
+            d2 = 0
             print("Factorial failed, possibly negative.")
 
-        return (a2 - a1) + (b2 - b1) + (c1 - c2) - d1
+        if self.player_agent.get_team() == Team.BLACK:
+            return (a2 - a1) + (b2 - b1) + (c1 - c2) - d2
+        elif self.player_agent.get_team() == Team.WHITE:
+            return (a1 - a2) + (b1 - b2) + (c2 - c1) - d1
+
 
     def calculate_distance_to_other_side(self, y_position, side):
 
@@ -203,7 +214,7 @@ class CheckersEnv:
             if side == Team.BLACK:
                 return 1.0
             elif side == Team.WHITE:
-                return 0.0
+                return -0.5
         elif y_position == 2 or y_position == 3:
             if side == Team.BLACK:
                 return 1.0
@@ -241,11 +252,17 @@ class CheckersEnv:
 
     def update_action_value_pairs(self):
 
-        leftward = [-1, -1]
-        rightward = [1, -1]
+        leftward = []
+        rightward = []
+
+        if self.player_agent.get_team() == Team.BLACK:
+            leftward = [-1, -1]
+            rightward = [1, -1]
+        elif self.player_agent.get_team() == Team.WHITE:
+            leftward = [-1, 1]
+            rightward = [1, 1]
 
         self.reset_action_value_pairs()
-        # print(self.player_agent.get_current_moveable_pieces())
 
         for piece in self.player_agent.get_current_moveable_pieces():
             new_leftward_position = [x + y for x, y in zip(piece, leftward)]  # new leftward movement position
@@ -283,7 +300,6 @@ class CheckersEnv:
     def update_games_and_win_or_lose(self, outcome):
 
         self.player_agent.increment_games_played()
-
         if outcome.WIN:
             self.player_agent.increment_games_won()
         elif outcome.LOSE:
