@@ -281,11 +281,13 @@ class CheckersEnv:
             return
 
     def update_games_and_win_or_lose(self, outcome):
-        self.games_played += 1
+
+        self.player_agent.increment_games_played()
+
         if outcome.WIN:
-            self.games_won += 1
+            self.player_agent.increment_games_won()
         elif outcome.LOSE:
-            self.games_lost += 1
+            self.player_agent.increment_games_lost()
         elif outcome.TIE:
             pass
 

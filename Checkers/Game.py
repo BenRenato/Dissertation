@@ -55,7 +55,7 @@ class Game:
                     print("White wins!")
                     if self.player2.get_player_type() == pt.AI:
                         self.new_random_vs_agent_game(oc.LOSE)
-                        sleep(2)
+
                     if self.player2.get_player_type() != pt.AI:
                         exit("\nGame over!")
 
@@ -63,7 +63,7 @@ class Game:
                     print("Tie game!")
                     if self.player2.get_player_type() == pt.AI:
                         self.new_random_vs_agent_game(oc.TIE)
-                        sleep(2)
+
                     if self.player2.get_player_type() != pt.AI:
                         exit("\nGame over!")
 
@@ -71,9 +71,12 @@ class Game:
                     print("Black wins!")
                     if self.player2.get_player_type() == pt.AI:
                         self.new_random_vs_agent_game(oc.WIN)
-                        sleep(2)
+
                     if self.player2.get_player_type() != pt.AI:
                         exit("\nGame over!")
+
+                if self.player2.get_games_played() == 200:
+                    exit("10 games played")
 
             print(str(self.current_turn) + " turn: \n")
 

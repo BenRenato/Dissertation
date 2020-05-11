@@ -1,6 +1,7 @@
 from Checkers import Enums
 import random
 
+
 class Player:
 
     def __init__(self, isBlack, player_type):
@@ -9,10 +10,11 @@ class Player:
         self.currentpieces = []
         self.current_moveable_pieces = []
 
-        #set current moveable pieces for each side
+        self.games_played = 0
+        self.games_won = 0
+        self.games_lost = 0
 
         self.init_player_vars()
-
 
     def init_player_vars(self):
         self.init_current_moveable_pieces()
@@ -21,14 +23,14 @@ class Player:
 
     def init_current_pieces_on_board(self):
 
-        #TODO change this to a hard coded set of pieces like init_current_moveable_pieces
+        # TODO change this to a hard coded set of pieces like init_current_moveable_pieces
 
         self.currentpieces.clear()
 
         for i in range(8):
             if i % 2 == 0:
                 if self.isblack:
-                    #add to current pieces
+                    # add to current pieces
                     self.currentpieces.append([i, 5])
                     self.currentpieces.append([i, 7])
 
@@ -41,10 +43,7 @@ class Player:
                     self.currentpieces.append([i, 0])
                     self.currentpieces.append([i, 2])
 
-
     def init_current_moveable_pieces(self):
-
-
 
         if self.isblack:
             self.current_moveable_pieces = [[0, 5], [2, 5], [4, 5], [6, 5]]
@@ -89,14 +88,14 @@ class Player:
 
     def updatecurrentpieces(self, startpiece, endpiece):
 
-        #print("Removing " + str(self.currentpieces[self.currentpieces.index(startpiece)]))
-        #print("Before removal " + str(sorted(self.currentpieces)))
+        # print("Removing " + str(self.currentpieces[self.currentpieces.index(startpiece)]))
+        # print("Before removal " + str(sorted(self.currentpieces)))
         self.currentpieces.remove(self.currentpieces[self.currentpieces.index(startpiece)])
-        #print("After removal " + str(sorted(self.currentpieces)))
+        # print("After removal " + str(sorted(self.currentpieces)))
 
-        #print("Appending " + str(endpiece))
+        # print("Appending " + str(endpiece))
         self.currentpieces.append(endpiece)
-        #print("After appending: " + str(sorted(self.currentpieces)))
+        # print("After appending: " + str(sorted(self.currentpieces)))
 
     def printcurrentpieces(self):
         print(sorted(self.currentpieces))
@@ -111,10 +110,29 @@ class Player:
         else:
             return False
 
+    def get_games_played(self):
+        return self.games_played
+
+    def get_games_lost(self):
+        return self.games_lost
+
+    def get_games_won(self):
+        return self.games_won
+
+    def increment_games_won(self):
+        self.games_won += 1
+
+    def increment_games_lost(self):
+        self.games_lost += 1
+
+    def increment_games_played(self):
+        self.games_played += 1
+
+
 class RandomPlayer(Player):
 
     def __init__(self, isBlack, player_type):
-        #Call super init to inherit members
+        # Call super init to inherit members
         Player.__init__(self, isBlack, player_type)
         self.chosen_piece = None
         self.chosen_piece_move_to = None
@@ -123,7 +141,6 @@ class RandomPlayer(Player):
 
         self.chosen_piece = random.choice(self.current_moveable_pieces)
         return self.chosen_piece
-
 
     def choose_random_end_position(self, start_position):
 
@@ -144,3 +161,6 @@ class RandomPlayer(Player):
         self.chosen_piece_move_to = temp_position
 
         return self.chosen_piece_move_to
+
+
+
