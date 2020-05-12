@@ -8,7 +8,8 @@ from Checkers_Agent.checkers_env import CheckersEnv as env
 import random
 from time import sleep
 from sys import exit
-
+import psutil
+import os
 
 class Game:
 
@@ -58,9 +59,11 @@ class Game:
                     print("White wins!")
                     if self.player2.get_player_type() == pt.AI and self.player1.get_player_type() == pt.RANDOM:
                         self.new_random_vs_agent_game(oc.LOSE)
+                        self.get_RAM_footprint()
 
                     elif self.player2.get_player_type() == pt.AI and self.player1.get_player_type() == pt.AI:
                         self.new_agent_vs_agent_game(oc.LOSE, oc.WIN)
+                        self.get_RAM_footprint()
 
                     elif self.player2.get_player_type() != pt.AI and self.player1.get_player_type() != pt.AI:
                         exit("\nGame over!")
@@ -69,9 +72,11 @@ class Game:
                     print("Tie game!")
                     if self.player2.get_player_type() == pt.AI and self.player1.get_player_type() == pt.RANDOM:
                         self.new_random_vs_agent_game(oc.TIE)
+                        self.get_RAM_footprint()
 
                     elif self.player1.get_player_type() == pt.AI and self.player2.get_player_type() == pt.AI:
                         self.new_agent_vs_agent_game(oc.TIE, oc.TIE)
+                        self.get_RAM_footprint()
 
                     elif self.player2.get_player_type() != pt.AI and self.player1.get_player_type() != pt.AI:
                         exit("\nGame over!")
@@ -80,15 +85,17 @@ class Game:
                     print("Black wins!")
                     if self.player2.get_player_type() == pt.AI and self.player1.get_player_type() == pt.RANDOM:
                         self.new_random_vs_agent_game(oc.WIN)
+                        self.get_RAM_footprint()
 
                     elif self.player1.get_player_type() == pt.AI and self.player2.get_player_type() == pt.AI:
                         self.new_agent_vs_agent_game(oc.WIN, oc.LOSE)
+                        self.get_RAM_footprint()
 
                     elif self.player2.get_player_type() != pt.AI and self.player1.get_player_type() != pt.AI:
                         exit("\nGame over!")
 
-                if self.player2.get_games_played() == 200:
-                    exit("10 games played")
+                if self.player2.get_games_played() == 50:
+                    exit("50 games played")
 
             print(str(self.current_turn) + " turn: \n")
 
@@ -133,6 +140,18 @@ class Game:
                 self.agent_vs_agent_game()
 
                 #TODO agent vs agent method
+
+    def get_RAM_footprint(self):
+
+        process = psutil.Process(os.getpid())
+        footprint = process.memory_info().rss / 1024 / 1024
+        print("RAM footprint is: " + str(footprint) + " MB")
+        if footprint > 300:
+            #TODO cull memory from agents here lmfao
+            print("More than 300MB")
+            exit(1)
+        else:
+            pass
 
 
     def agent_vs_agent_game(self):

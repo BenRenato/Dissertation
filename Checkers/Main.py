@@ -35,6 +35,6 @@ def main():
 
 
 if __name__ == "__main__":
-    #main()
+    main()
 
-    cProfile.run('main()')
+    #cProfile.run('main()')

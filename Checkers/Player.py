@@ -10,6 +10,7 @@ class Player:
         self.currentpieces = []
         self.current_moveable_pieces = []
 
+        self.last_ten_games = []
         self.games_played = 0
         self.games_won = 0
         self.games_lost = 0
@@ -127,6 +128,14 @@ class Player:
 
     def increment_games_played(self):
         self.games_played += 1
+
+    def add_result_to_last_10_games(self, outcome):
+
+        if len(self.last_ten_games) == 10:
+            del self.last_ten_games[0]
+            print("DELETED 0 INDEX")
+
+        self.last_ten_games.append(outcome)
 
 
 class RandomPlayer(Player):

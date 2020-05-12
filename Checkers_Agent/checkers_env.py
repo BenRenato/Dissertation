@@ -304,8 +304,8 @@ class CheckersEnv:
             self.player_agent.increment_games_won()
         elif outcome.LOSE:
             self.player_agent.increment_games_lost()
-        elif outcome.TIE:
-            pass
+
+        self.player_agent.add_result_to_last_10_games(outcome)
 
     def get_current_state_action_value_pairs(self):
 
