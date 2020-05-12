@@ -4,12 +4,13 @@ from Checkers.Player import RandomPlayer as randplayer
 from Checkers.Move import Move as move
 from Checkers.Enums import Player_Types as pt
 from Checkers.Enums import Outcome as oc
+from Checkers.Enums import Game_Type as gt
+from Checkers.Enums import Team
 from Checkers_Agent.checkers_env import CheckersEnv as env
 import random
 from time import sleep
 from sys import exit
-import psutil
-import os
+
 
 class Game:
 
@@ -54,48 +55,16 @@ class Game:
         while 1:
 
             if self.check_terminal_state():
-                # TODO METHOD-IFY to get type of game, e.g random and ai returns game_type.RAN_AI
-                if self.player1.get_number_of_pieces_on_board() > self.player2.get_number_of_pieces_on_board():
-                    print("White wins!")
-                    if self.player2.get_player_type() == pt.AI and self.player1.get_player_type() == pt.RANDOM:
-                        self.new_random_vs_agent_game(oc.LOSE)
-                        self.get_RAM_footprint()
 
-                    elif self.player2.get_player_type() == pt.AI and self.player1.get_player_type() == pt.AI:
-                        self.new_agent_vs_agent_game(oc.LOSE, oc.WIN)
-                        self.get_RAM_footprint()
+                winner = self.get_game_winner()
 
-                    elif self.player2.get_player_type() != pt.AI and self.player1.get_player_type() != pt.AI:
-                        exit("\nGame over!")
+                type = self.get_game_type()
 
-                elif self.player1.get_number_of_pieces_on_board() == self.player2.get_number_of_pieces_on_board():
-                    print("Tie game!")
-                    if self.player2.get_player_type() == pt.AI and self.player1.get_player_type() == pt.RANDOM:
-                        self.new_random_vs_agent_game(oc.TIE)
-                        self.get_RAM_footprint()
+                print("The winner is " + str(winner) + ".")
 
-                    elif self.player1.get_player_type() == pt.AI and self.player2.get_player_type() == pt.AI:
-                        self.new_agent_vs_agent_game(oc.TIE, oc.TIE)
-                        self.get_RAM_footprint()
+                self.resolve_end_game_state_and_setup_next_game(type, winner)
 
-                    elif self.player2.get_player_type() != pt.AI and self.player1.get_player_type() != pt.AI:
-                        exit("\nGame over!")
-
-                elif self.player1.get_number_of_pieces_on_board() < self.player2.get_number_of_pieces_on_board():
-                    print("Black wins!")
-                    if self.player2.get_player_type() == pt.AI and self.player1.get_player_type() == pt.RANDOM:
-                        self.new_random_vs_agent_game(oc.WIN)
-                        self.get_RAM_footprint()
-
-                    elif self.player1.get_player_type() == pt.AI and self.player2.get_player_type() == pt.AI:
-                        self.new_agent_vs_agent_game(oc.WIN, oc.LOSE)
-                        self.get_RAM_footprint()
-
-                    elif self.player2.get_player_type() != pt.AI and self.player1.get_player_type() != pt.AI:
-                        exit("\nGame over!")
-
-                if self.player2.get_games_played() == 50:
-                    exit("50 games played")
+                self.exit_game_after_X_games()
 
             print(str(self.current_turn) + " turn: \n")
 
@@ -109,8 +78,8 @@ class Game:
                         self.check_if_exit()
                         self.input_to_coordinates()
                         self.send_move_request()
-                    # TODO should probably change exception to ValueError, TypeError etc for performance reasons
-                    except Exception:
+                    # TODO double check ValueError is enough
+                    except ValueError:
                         print("Wrong format")
                         self.take_player_input()
                         continue
@@ -139,19 +108,61 @@ class Game:
 
                 self.agent_vs_agent_game()
 
-                #TODO agent vs agent method
+    def exit_game_after_X_games(self):
 
-    def get_RAM_footprint(self):
+        if self.player2.get_games_played() == 50:
+            exit("50 games played")
 
-        process = psutil.Process(os.getpid())
-        footprint = process.memory_info().rss / 1024 / 1024
-        print("RAM footprint is: " + str(footprint) + " MB")
-        if footprint > 300:
-            #TODO cull memory from agents here lmfao
-            print("More than 300MB")
-            exit(1)
+    def resolve_end_game_state_and_setup_next_game(self, type, winner):
+
+        if type == gt.RvAI:
+            if winner == Team.BLACK:
+                self.new_random_vs_agent_game(oc.WIN)
+            elif winner == Team.WHITE:
+                self.new_random_vs_agent_game(oc.LOSE)
+            else:
+                self.new_random_vs_agent_game(oc.TIE)
+
+        elif type == gt.AIvsAI:
+            if winner == Team.BLACK:
+                self.new_agent_vs_agent_game(oc.WIN, oc.LOSE)
+            elif winner == Team.WHITE:
+                self.new_agent_vs_agent_game(oc.LOSE, oc.WIN)
+            else:
+                self.new_agent_vs_agent_game(oc.TIE, oc.TIE)
+
+
+    def get_game_type(self):
+
+        white_type = self.player1.get_player_type()
+        black_type = self.player2.get_player_type()
+
+        if white_type == pt.HUMAN and black_type == pt.HUMAN:
+            return gt.PvP
+        elif white_type == pt.RANDOM and black_type == pt.RANDOM:
+            return gt.RvR
+        elif white_type == pt.RANDOM and black_type == pt.AI:
+            return gt.RvAI
+        elif white_type == pt.AI and black_type == pt.AI:
+            return gt.AIvsAI
+
+    def get_game_winner(self):
+
+        black_on_board = self.player2.get_number_of_pieces_on_board()
+        white_on_board = self.player1.get_number_of_pieces_on_board()
+
+        if black_on_board > white_on_board:
+            print("Black wins!")
+            return self.player2.get_team()
+        elif white_on_board > black_on_board:
+            print("White wins!")
+            return self.player1.get_team()
         else:
-            pass
+            print("Tie game!")
+            return None
+
+
+
 
 
     def agent_vs_agent_game(self):
@@ -285,7 +296,6 @@ class Game:
 
     def input_to_coordinates(self):
 
-        # TODO try catch here
         self.piece_to_move = [int(s) for s in self.piece_to_move.split(',')]
         self.piece_move_to = [int(s) for s in self.piece_move_to.split(',')]
 

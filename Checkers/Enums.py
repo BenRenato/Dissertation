@@ -27,3 +27,10 @@ class Outcome(Enum):
     WIN = 1
     TIE = 0
     LOSE = -1
+
+class Game_Type(Enum):
+
+    PvP = 1
+    RvR = 2
+    RvAI = 3
+    AIvsAI = 4

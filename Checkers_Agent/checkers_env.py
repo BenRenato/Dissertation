@@ -7,6 +7,8 @@ from Checkers_Agent.action_value_pair import Action_Value_Pair
 from copy import deepcopy
 import random as rand
 from math import exp, factorial
+import psutil
+import os
 
 #TODO need to make new_agent_vs_agent_game() in game() to accomodate the white agent
 
@@ -310,3 +312,15 @@ class CheckersEnv:
     def get_current_state_action_value_pairs(self):
 
         return self.state_action_value_pairs
+
+    def get_RAM_footprint(self):
+
+        process = psutil.Process(os.getpid())
+        footprint = process.memory_info().rss / 1024 / 1024
+        print("RAM footprint is: " + str(footprint) + " MB")
+        if footprint > 300:
+            #TODO cull memory from agents here lmfao
+            print("More than 300MB")
+            exit(1)
+        else:
+            pass
