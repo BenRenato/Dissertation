@@ -1,5 +1,5 @@
 from time import sleep
-
+from multiprocessing import Process, Queue
 from Checkers.Enums import Team, Outcome
 from Checkers.Move import Move
 from Checkers_Agent.state_action_pair import State_Action_Pair
@@ -8,19 +8,12 @@ from Metrics.Environment_Metrics import Env_Metrics
 from copy import deepcopy
 import random as rand
 from math import exp, factorial
-import psutil
-import os
 
 
 # TODO need to make new_agent_vs_agent_game() in game() to accomodate the white agent
 
 class CheckersEnv:
-    # Ve =  α(A2 − A1) +  α(B2 − B1) +  α(C1 - C2)
-    # Ai = squared sum distance to other side for player i
-    # Bi = squared sum distance to centre for all pieces of player i
-    # Ci = the sum of maximum vertical advanced for all pieces e.g lower score for pieces near start of board
-    #  α = learning rate between 0 - 1.0
-    # w1, w2, w3, all weights calculated by evaluation func MAYBE
+
 
     # start state, available moves, all same reward, randomly select move, move into state, use policy above to adjust reward,
     # keep track of moves made, further update value of moves if we win/lose, game starts again with a bit new knowledge
@@ -32,7 +25,7 @@ class CheckersEnv:
     def __init__(self, heuristics_only=True):
 
         self.state_action_value_pairs = []
-        self.epsilon_greedy_value = 0.2  # 0.2 = 10% of the time pick a random action, 90% time greedy (rand.random can only produce 0.1-1.0)
+        self.epsilon_greedy_value = 0  # 0.2 = 10% of the time pick a random action, 90% time greedy (rand.random can only produce 0.1-1.0)
         self.learning_rate = 1.0  # 1 = harsh punishments/big rewards. 0.1 = small punishments and small rewards
         self.player_agent = None
         self.current_state = None
@@ -43,7 +36,6 @@ class CheckersEnv:
         self.games_lost = 0
         self.write_to_file_tracker = 1
         self.first_write_to_file = True
-        # TODO change as needed
         self.heuristic_mode = heuristics_only
         self.Env_Metrics = Env_Metrics()
 
@@ -55,17 +47,21 @@ class CheckersEnv:
 
         self.update_action_value_pairs()
 
-        for pair in self.get_action_value_pairs():
-            temp_state = deepcopy(self.current_state)
-            action_to_evaluate = pair.get_action()
-
-            if action_to_evaluate.makemove(temp_state):
-                state_value = self.state_value_from_policy(temp_state)
-                possible_action_values.append(Action_Value_Pair(action_to_evaluate, state_value))
-            else:
-                pass
+        self.create_action_value_pair_values(possible_action_values)
 
         matching_action_pair = self.check_state_seen_before()
+
+        # This was an attempt at creating some multiprocessing for the functions where most of the time is spent.
+        # create_pair_return_value = Queue()
+        # check_state_return_value = Queue()
+        # m1 = Process(target=self.check_state_seen_before, args=(check_state_return_value,))
+        # m2 = Process(target=self.create_action_value_pair_values, args=(create_pair_return_value,))
+        # m1.start()
+        # m2.start()
+        # m1.join()
+        # m2.join()
+        # matching_action_pair = check_state_return_value.get()
+        # possible_action_values = create_pair_return_value.get()
 
         if matching_action_pair is not None:
             possible_action_values.append(matching_action_pair)
@@ -84,6 +80,18 @@ class CheckersEnv:
         self.current_game_moves.append(new_state_action_value_pair.get_action_pair())
 
         return best_move.get_action()
+
+    def create_action_value_pair_values(self, possible_action_values):
+
+        for pair in self.get_action_value_pairs():
+            temp_state = deepcopy(self.current_state)
+            action_to_evaluate = pair.get_action()
+
+            if action_to_evaluate.makemove(temp_state):
+                state_value = self.state_value_from_policy(temp_state)
+                possible_action_values.append(Action_Value_Pair(action_to_evaluate, state_value))
+            else:
+                pass
 
     def check_state_seen_before(self):
 
@@ -144,11 +152,10 @@ class CheckersEnv:
 
         # Di
 
-        black_furthest_back_piece = 0
+        black_furthest_back_piece = self.calculate_lagging_piece(state)
 
-        white_furthest_back_piece = 0
+        white_furthest_back_piece = self.calculate_lagging_piece(state)
 
-        # TODO clean up please future Ben
         for i in range(state.get_x()):
             for j in range(state.get_y()):
                 if state[i, j].getoccupier().team == Team.BLACK:
@@ -162,12 +169,6 @@ class CheckersEnv:
                     white_sum_distance_to_centre += self.calculate_distance_from_centre(i)
 
                     white_counters_on_board += 1
-
-        # TODO once verified working and merge into return statement
-
-        black_furthest_back_piece = self.calculate_lagging_piece(state)
-
-        white_furthest_back_piece = self.calculate_lagging_piece(state)
 
         state_value = self.calculate_policy_with_current_values(black_sum_distance_to_other_side,
                                                                 white_sum_distance_to_other_side
@@ -247,8 +248,8 @@ class CheckersEnv:
 
     # Update state_space data based on win/lose
     def post_game_heuristics(self, outcome_black, outcome_white):
-        # TODO edit move values based on win/lose, adjust alpha learning rate here too, possibly change epsilon
-        pass
+        # TODO HERE
+        self.used_too_much_ram()
 
     def calculate_distance_from_centre(self, x_position):
 
@@ -301,7 +302,6 @@ class CheckersEnv:
         WR, WR_10 = self.player_agent.calculate_WRs()
 
         if self.write_to_file_tracker == 10:
-            # TODO pass WR and WR10
             self.Env_Metrics.write_env_data_to_file(WR, WR_10, self.player_agent.get_games_played()
                                                     , self.player_agent.get_team())
             self.write_to_file_tracker = 0
@@ -344,11 +344,12 @@ class CheckersEnv:
 
         return self.state_action_value_pairs
 
-    def used_too_much_RAM(self):
+    def used_too_much_ram(self):
 
-        if self.Env_Metrics.get_RAM_footprint() > 2048:
-            # TODO cull memory from agents here lmfao
-            print("More than 2GB used, culling cached state_space...")
-            sleep(5)
+        defined_memory = 100
+
+        if self.Env_Metrics.get_ram_footprint() > defined_memory:
+            print("More than {} used, culling cached state_space...".format(defined_memory))
+            self.Env_Metrics.cull_cached_state_space(self.get_current_state_action_value_pairs())
         else:
             pass

@@ -122,8 +122,8 @@ class Game:
 
     def exit_game_after_X_games(self):
 
-        if self.player2.get_games_played() == 30:
-            exit("50 games played")
+        if self.player2.get_games_played() == 800:
+            exit("100 games played")
 
     def resolve_end_game_state_and_setup_next_game(self, type, winner):
 
