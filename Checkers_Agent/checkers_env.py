@@ -4,6 +4,7 @@ from Checkers.Enums import Team, Outcome
 from Checkers.Move import Move
 from Checkers_Agent.state_action_pair import State_Action_Pair
 from Checkers_Agent.action_value_pair import Action_Value_Pair
+from Metrics.Environment_Metrics import Env_Metrics
 from copy import deepcopy
 import random as rand
 from math import exp, factorial
@@ -28,7 +29,7 @@ class CheckersEnv:
 
     # learning rate, after x games we can reduce the swing of the updates to smaller increments
 
-    def __init__(self):
+    def __init__(self, heuristics_only=True):
 
         self.state_action_value_pairs = []
         self.epsilon_greedy_value = 0.2  # 0.2 = 10% of the time pick a random action, 90% time greedy (rand.random can only produce 0.1-1.0)
@@ -36,11 +37,17 @@ class CheckersEnv:
         self.player_agent = None
         self.current_state = None
         self.action_value_pairs = []
+        self.current_game_moves = []
         self.games_played = 0
         self.games_won = 0
         self.games_lost = 0
-        self.write_to_file_tracker = 0
+        self.write_to_file_tracker = 1
         self.first_write_to_file = True
+        # TODO change as needed
+        self.heuristic_mode = heuristics_only
+        self.Env_Metrics = Env_Metrics()
+
+        self.Env_Metrics.delete_previous_data()
 
     def calculate_best_move(self):
 
@@ -69,8 +76,12 @@ class CheckersEnv:
 
         best_move = self.evaluate_best_move(possible_action_values)
 
+        new_state_action_value_pair = State_Action_Pair(deepcopy(self.current_state.get_board()), best_move)
+
         if matching_action_pair is None:
-            self.state_action_value_pairs.append(State_Action_Pair(deepcopy(self.current_state.get_board()), best_move))
+            self.state_action_value_pairs.append(new_state_action_value_pair)
+
+        self.current_game_moves.append(new_state_action_value_pair.get_action_pair())
 
         return best_move.get_action()
 
@@ -235,7 +246,7 @@ class CheckersEnv:
                 return 1.0
 
     # Update state_space data based on win/lose
-    def post_game_heuristics(self):
+    def post_game_heuristics(self, outcome_black, outcome_white):
         # TODO edit move values based on win/lose, adjust alpha learning rate here too, possibly change epsilon
         pass
 
@@ -287,8 +298,12 @@ class CheckersEnv:
 
     def increment_file_write_tracker(self):
 
+        WR, WR_10 = self.player_agent.calculate_WRs()
+
         if self.write_to_file_tracker == 10:
-            self.write_env_data_to_file()
+            # TODO pass WR and WR10
+            self.Env_Metrics.write_env_data_to_file(WR, WR_10, self.player_agent.get_games_played()
+                                                    , self.player_agent.get_team())
             self.write_to_file_tracker = 0
 
         self.write_to_file_tracker += 1
@@ -297,6 +312,7 @@ class CheckersEnv:
         self.set_current_state(board)
         self.set_player(player)
         self.reset_action_value_pairs()
+        self.reset_current_games_moves()
 
     def get_action_value_pairs(self):
         return self.action_value_pairs
@@ -308,17 +324,21 @@ class CheckersEnv:
         else:
             return
 
+    def reset_current_games_moves(self):
+
+        self.current_game_moves.clear()
+
     def update_games_and_win_or_lose(self, outcome):
 
-        self.increment_file_write_tracker()
         self.player_agent.increment_games_played()
 
-        if outcome.WIN:
+        if outcome == outcome.WIN:
             self.player_agent.increment_games_won()
-        elif outcome.LOSE:
+        elif outcome == outcome.LOSE:
             self.player_agent.increment_games_lost()
 
         self.player_agent.add_result_to_last_10_games(outcome)
+        self.increment_file_write_tracker()
 
     def get_current_state_action_value_pairs(self):
 
@@ -326,42 +346,9 @@ class CheckersEnv:
 
     def used_too_much_RAM(self):
 
-        if self.get_RAM_footprint() > 2048:
+        if self.Env_Metrics.get_RAM_footprint() > 2048:
             # TODO cull memory from agents here lmfao
             print("More than 2GB used, culling cached state_space...")
             sleep(5)
         else:
             pass
-
-    def get_RAM_footprint(self):
-        process = psutil.Process(os.getpid())
-        footprint = process.memory_info().rss / 1024 / 1024
-        print("RAM footprint is: " + str(footprint) + " MB")
-
-        return footprint
-
-
-    def write_env_data_to_file(self):
-        # TODO also write best, worst, and average values to file
-        # TODO also method the path exists stuff keep write logic
-
-        winrate = 0
-
-        winrate_10_games = 0
-
-        RAM_usage = self.get_RAM_footprint()
-
-        if os.path.exists("env_data.txt") and self.first_write_to_file:
-            self.first_write_to_file = False
-            print("Previous env data found, deleting...")
-            open('env_data.txt', 'w').close()
-            sleep(5)
-
-        with open("env_data.txt", "a") as text_file:
-            text_file.write("WR all/10 games: {:.2f}%/{:.2f}%\n"
-                            "RAM usage: {}MB\n".format(winrate, winrate_10_games, RAM_usage))
-
-
-    def cull_cached_state_space(self):
-        # TODO iterate and cull
-        pass

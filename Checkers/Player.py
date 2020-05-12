@@ -137,6 +137,32 @@ class Player:
 
         self.last_ten_games.append(outcome)
 
+    def get_last_10_games(self):
+
+        return self.last_ten_games
+
+    def calculate_WRs(self):
+
+        return self.calculate_WR_overall(), self.calculate_WR_past_10_games()
+
+    def calculate_WR_overall(self):
+
+        return (self.games_won / self.games_played) * 100
+
+    def calculate_WR_past_10_games(self):
+
+        if len(self.last_ten_games) == 10:
+            wins = 0
+
+            for outcome in self.get_last_10_games():
+                if outcome == outcome.WIN:
+                    wins += 1
+
+            return (wins / 10) * 100
+        else:
+            return 0
+
+
 
 class RandomPlayer(Player):
 

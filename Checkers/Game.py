@@ -21,25 +21,32 @@ class Game:
         # Player 1
         if player1_type == pt.HUMAN:
             self.player1 = player(False, pt.HUMAN)
-        if player1_type == pt.AI:
-            self.player1 = player(False, pt.AI)
+        elif player1_type == pt.HEURISTIC:
+            self.player1 = player(False, pt.HEURISTIC)
             self.env_white = env()
         elif player1_type == pt.RANDOM:
             self.player1 = randplayer(False, pt.RANDOM)
+        elif player1_type == pt.AI:
+            self.player1 = player(False, pt.AI)
+            self.env_white = env(False)
 
         # Player 2
         if player2_type == pt.HUMAN:
             self.player2 = player(True, pt.HUMAN)
-        elif player2_type == pt.AI:
-            self.player2 = player(True, pt.AI)
+        elif player2_type == pt.HEURISTIC:
+            self.player2 = player(True, pt.HEURISTIC)
             self.env_black = env()
         elif player2_type == pt.RANDOM:
             self.player2 = randplayer(True, pt.RANDOM)
+        elif player2_type == pt.AI:
+            self.player2 = player(True, pt.AI)
+            self.env_black = env(False)
 
         self.piece_to_move = None
         self.piece_move_to = None
         self.current_turn = None
         self.init_agent = True
+        self.game_type = self.get_game_type()
 
     def run(self):
         self.board.setupdefaultboard()
@@ -58,11 +65,9 @@ class Game:
 
                 winner = self.get_game_winner()
 
-                type = self.get_game_type()
-
                 print("The winner is " + str(winner) + ".")
 
-                self.resolve_end_game_state_and_setup_next_game(type, winner)
+                self.resolve_end_game_state_and_setup_next_game(self.game_type, winner)
 
                 self.exit_game_after_X_games()
 
@@ -70,7 +75,7 @@ class Game:
 
             #TODO make the check for player_types be for game type
             # Player input
-            if self.player1.get_player_type() == pt.HUMAN and self.player2.get_player_type() == pt.HUMAN:
+            if self.game_type == gt.PvP:
                 self.take_player_input()
 
                 # Turn coords into keys
@@ -87,12 +92,12 @@ class Game:
                     else:
                         break
 
-            elif self.player1.get_player_type() == pt.RANDOM and self.player2.get_player_type() == pt.RANDOM:
+            elif self.game_type == gt.RvR:
 
                 self.get_random_move()
                 self.send_move_request()
 
-            elif self.player1.get_player_type() == pt.RANDOM and self.player2.get_player_type() == pt.AI:
+            elif self.game_type == gt.RvH:
 
                 if self.init_agent:
                     self.env_black.init_env_vars(self.board, self.player2)
@@ -100,7 +105,7 @@ class Game:
 
                 self.random_vs_agent_game()
 
-            elif self.player1.get_player_type() == pt.AI and self.player2.get_player_type() == pt.AI:
+            elif self.game_type == gt.HvH:
 
                 if self.init_agent:
                     self.env_white.init_env_vars(self.board, self.player1)
@@ -109,28 +114,43 @@ class Game:
 
                 self.agent_vs_agent_game()
 
+            elif self.game_type == gt.RvAI:
+                pass
+
+            elif self.game_type == gt.AIvAI:
+                pass
+
     def exit_game_after_X_games(self):
 
-        if self.player2.get_games_played() == 50:
+        if self.player2.get_games_played() == 30:
             exit("50 games played")
 
     def resolve_end_game_state_and_setup_next_game(self, type, winner):
 
-        if type == gt.RvAI:
+        if type == gt.RvH:
             if winner == Team.BLACK:
                 self.new_random_vs_agent_game(oc.WIN)
+                self.env_black.post_game_heuristics(oc.WIN, oc.LOSE)
             elif winner == Team.WHITE:
                 self.new_random_vs_agent_game(oc.LOSE)
+                self.env_black.post_game_heuristics(oc.LOSE, oc.WIN)
             else:
                 self.new_random_vs_agent_game(oc.TIE)
+                self.env_black.post_game_heuristics(oc.TIE, oc.TIE)
 
-        elif type == gt.AIvsAI:
+        elif type == gt.HvH:
             if winner == Team.BLACK:
                 self.new_agent_vs_agent_game(oc.WIN, oc.LOSE)
+                self.env_black.post_game_heuristics(oc.WIN, oc.LOSE)
+                self.env_white.post_game_heuristics(oc.LOSE, oc.WIN)
             elif winner == Team.WHITE:
                 self.new_agent_vs_agent_game(oc.LOSE, oc.WIN)
+                self.env_black.post_game_heuristics(oc.WIN, oc.LOSE)
+                self.env_white.post_game_heuristics(oc.LOSE, oc.WIN)
             else:
                 self.new_agent_vs_agent_game(oc.TIE, oc.TIE)
+                self.env_black.post_game_heuristics(oc.TIE, oc.TIE)
+                self.env_white.post_game_heuristics(oc.TIE, oc.TIE)
 
 
     def get_game_type(self):
@@ -142,10 +162,14 @@ class Game:
             return gt.PvP
         elif white_type == pt.RANDOM and black_type == pt.RANDOM:
             return gt.RvR
+        elif white_type == pt.RANDOM and black_type == pt.HEURISTIC:
+            return gt.RvH
+        elif white_type == pt.HEURISTIC and black_type == pt.HEURISTIC:
+            return gt.HvH
         elif white_type == pt.RANDOM and black_type == pt.AI:
             return gt.RvAI
         elif white_type == pt.AI and black_type == pt.AI:
-            return gt.AIvsAI
+            return gt.AIvAI
 
     def get_game_winner(self):
 
@@ -184,24 +208,21 @@ class Game:
             print(self.current_turn.printcurrentpieces())
             exit(1)
 
-    def new_random_vs_agent_game(self, outcome):
+    def reset_game(self):
         self.board = checkboard(8, 8)
         self.board.setupdefaultboard()
         self.board.printboard()
         self.current_turn = random.choice([self.player1, self.player2])
         self.player1.init_player_vars()
         self.player2.init_player_vars()
+
+    def new_random_vs_agent_game(self, outcome):
+        self.reset_game()
         self.env_black.init_env_vars(self.board, self.player2)
         self.env_black.update_games_and_win_or_lose(outcome)
 
     def new_agent_vs_agent_game(self, outcome_black, outcome_white):
-        #TODO merge similar func calls into own method
-        self.board = checkboard(8, 8)
-        self.board.setupdefaultboard()
-        self.board.printboard()
-        self.current_turn = random.choice([self.player1, self.player2])
-        self.player1.init_player_vars()
-        self.player2.init_player_vars()
+        self.reset_game()
         self.env_black.init_env_vars(self.board, self.player2)
         self.env_white.init_env_vars(self.board, self.player1)
         self.env_black.update_games_and_win_or_lose(outcome_black)

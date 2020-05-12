@@ -21,6 +21,7 @@ class Player_Types(Enum):
     HUMAN = "human"
     AI = "ai"
     RANDOM = "random"
+    HEURISTIC = "heuristic"
 
 class Outcome(Enum):
 
@@ -32,5 +33,7 @@ class Game_Type(Enum):
 
     PvP = 1
     RvR = 2
-    RvAI = 3
-    AIvsAI = 4
+    RvH = 3
+    HvH = 4
+    RvAI = 5
+    AIvAI = 6
