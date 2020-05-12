@@ -10,7 +10,8 @@ from math import exp, factorial
 import psutil
 import os
 
-#TODO need to make new_agent_vs_agent_game() in game() to accomodate the white agent
+
+# TODO need to make new_agent_vs_agent_game() in game() to accomodate the white agent
 
 class CheckersEnv:
     # Ve =  α(A2 − A1) +  α(B2 − B1) +  α(C1 - C2)
@@ -38,6 +39,8 @@ class CheckersEnv:
         self.games_played = 0
         self.games_won = 0
         self.games_lost = 0
+        self.write_to_file_tracker = 0
+        self.first_write_to_file = True
 
     def calculate_best_move(self):
 
@@ -83,7 +86,6 @@ class CheckersEnv:
             else:
                 print("No previous state found.")
                 return None
-
 
         # Ignore PyCharm suggesting static method, we don't want to call this without a class instance
 
@@ -209,7 +211,6 @@ class CheckersEnv:
         elif self.player_agent.get_team() == Team.WHITE:
             return (a1 - a2) + (b1 - b2) + (c2 - c1) - d1
 
-
     def calculate_distance_to_other_side(self, y_position, side):
 
         if y_position == 0 or y_position == 1:
@@ -284,6 +285,14 @@ class CheckersEnv:
     def reset_action_value_pairs(self):
         self.action_value_pairs = []
 
+    def increment_file_write_tracker(self):
+
+        if self.write_to_file_tracker == 10:
+            self.write_env_data_to_file()
+            self.write_to_file_tracker = 0
+
+        self.write_to_file_tracker += 1
+
     def init_env_vars(self, board, player):
         self.set_current_state(board)
         self.set_player(player)
@@ -301,7 +310,9 @@ class CheckersEnv:
 
     def update_games_and_win_or_lose(self, outcome):
 
+        self.increment_file_write_tracker()
         self.player_agent.increment_games_played()
+
         if outcome.WIN:
             self.player_agent.increment_games_won()
         elif outcome.LOSE:
@@ -313,14 +324,44 @@ class CheckersEnv:
 
         return self.state_action_value_pairs
 
-    def get_RAM_footprint(self):
+    def used_too_much_RAM(self):
 
+        if self.get_RAM_footprint() > 2048:
+            # TODO cull memory from agents here lmfao
+            print("More than 2GB used, culling cached state_space...")
+            sleep(5)
+        else:
+            pass
+
+    def get_RAM_footprint(self):
         process = psutil.Process(os.getpid())
         footprint = process.memory_info().rss / 1024 / 1024
         print("RAM footprint is: " + str(footprint) + " MB")
-        if footprint > 300:
-            #TODO cull memory from agents here lmfao
-            print("More than 300MB")
-            exit(1)
-        else:
-            pass
+
+        return footprint
+
+
+    def write_env_data_to_file(self):
+        # TODO also write best, worst, and average values to file
+        # TODO also method the path exists stuff keep write logic
+
+        winrate = 0
+
+        winrate_10_games = 0
+
+        RAM_usage = self.get_RAM_footprint()
+
+        if os.path.exists("env_data.txt") and self.first_write_to_file:
+            self.first_write_to_file = False
+            print("Previous env data found, deleting...")
+            open('env_data.txt', 'w').close()
+            sleep(5)
+
+        with open("env_data.txt", "a") as text_file:
+            text_file.write("WR all/10 games: {:.2f}%/{:.2f}%\n"
+                            "RAM usage: {}MB\n".format(winrate, winrate_10_games, RAM_usage))
+
+
+    def cull_cached_state_space(self):
+        # TODO iterate and cull
+        pass

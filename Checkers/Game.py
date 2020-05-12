@@ -68,6 +68,7 @@ class Game:
 
             print(str(self.current_turn) + " turn: \n")
 
+            #TODO make the check for player_types be for game type
             # Player input
             if self.player1.get_player_type() == pt.HUMAN and self.player2.get_player_type() == pt.HUMAN:
                 self.take_player_input()
@@ -161,10 +162,6 @@ class Game:
             print("Tie game!")
             return None
 
-
-
-
-
     def agent_vs_agent_game(self):
 
         if self.current_turn == self.player1:
@@ -198,6 +195,7 @@ class Game:
         self.env_black.update_games_and_win_or_lose(outcome)
 
     def new_agent_vs_agent_game(self, outcome_black, outcome_white):
+        #TODO merge similar func calls into own method
         self.board = checkboard(8, 8)
         self.board.setupdefaultboard()
         self.board.printboard()
