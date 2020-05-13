@@ -214,11 +214,23 @@ class Game:
 
     def agent_vs_agent_game(self):
 
+
         if self.current_turn == self.player1:
+
             agent_selected_move = self.agent_move_and_update(self.env_white)
 
             self.piece_to_move = agent_selected_move.get_start_position()
             self.piece_move_to = agent_selected_move.get_end_position()
+
+            num_enemy_pieces = self.player1.get_number_of_pieces_on_board()
+            if self.send_move_request():
+                if self.player1.get_number_of_pieces_on_board() < num_enemy_pieces:
+                    agent_selected_move.set_took_piece()
+                pass
+            else:
+                print("Agent move failed for " + str(self.current_turn))
+                print(self.current_turn.printcurrentpieces())
+                exit(1)
 
         elif self.current_turn == self.player2:
 
@@ -227,12 +239,17 @@ class Game:
             self.piece_to_move = agent_selected_move.get_start_position()
             self.piece_move_to = agent_selected_move.get_end_position()
 
-        if self.send_move_request():
-            pass
-        else:
-            print("Agent move failed for " + str(self.current_turn))
-            print(self.current_turn.printcurrentpieces())
-            exit(1)
+            num_enemy_pieces = self.player1.get_number_of_pieces_on_board()
+
+            if self.send_move_request():
+                if self.player1.get_number_of_pieces_on_board() < num_enemy_pieces:
+                    agent_selected_move.set_took_piece()
+                pass
+            else:
+                print("Agent move failed for " + str(self.current_turn))
+                print(self.current_turn.printcurrentpieces())
+                exit(1)
+
 
     def reset_game(self):
         self.board = checkboard(8, 8)
@@ -264,7 +281,12 @@ class Game:
             self.piece_move_to = agent_selected_move.get_end_position()
 
             self.player2.printcurrentpieces()
+
+            num_enemy_pieces = self.player1.get_number_of_pieces_on_board()
+
             if self.send_move_request():
+                if self.player1.get_number_of_pieces_on_board() < num_enemy_pieces:
+                    agent_selected_move.set_took_piece()
                 pass
             else:
                 self.player2.printcurrentpieces()

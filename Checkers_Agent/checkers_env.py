@@ -14,7 +14,6 @@ from math import exp, factorial
 
 class CheckersEnv:
 
-
     # start state, available moves, all same reward, randomly select move, move into state, use policy above to adjust reward,
     # keep track of moves made, further update value of moves if we win/lose, game starts again with a bit new knowledge
 
@@ -25,8 +24,7 @@ class CheckersEnv:
     def __init__(self, heuristics_only=True):
 
         self.state_action_value_pairs = []
-        self.epsilon_greedy_value = 0  # 0.2 = 10% of the time pick a random action, 90% time greedy (rand.random can only produce 0.1-1.0)
-        self.learning_rate = 1.0  # 1 = harsh punishments/big rewards. 0.1 = small punishments and small rewards
+        self.learning_rate = 10.0
         self.player_agent = None
         self.current_state = None
         self.action_value_pairs = []
@@ -65,10 +63,6 @@ class CheckersEnv:
 
         if matching_action_pair is not None:
             possible_action_values.append(matching_action_pair)
-
-        if rand.random() < self.epsilon_greedy_value:
-            action = rand.choice(possible_action_values)
-            return action.get_action()
 
         best_move = self.evaluate_best_move(possible_action_values)
 
@@ -216,9 +210,9 @@ class CheckersEnv:
             print("Factorial failed, possibly negative.")
 
         if self.player_agent.get_team() == Team.BLACK:
-            return (a2 - a1) + (b2 - b1) + (c1 - c2) - d2
+            return a2 + b2 + ((c2 - c1) ** 2) - (d2 ** 2)
         elif self.player_agent.get_team() == Team.WHITE:
-            return (a1 - a2) + (b1 - b2) + (c2 - c1) - d1
+            return a1 + b1 + ((c1 - c2) ** 2) - (d1 ** 2)
 
     def calculate_distance_to_other_side(self, y_position, side):
 
@@ -226,20 +220,20 @@ class CheckersEnv:
             if side == Team.BLACK:
                 return 1.0
             elif side == Team.WHITE:
-                return -0.5
+                return 0.0
         elif y_position == 2 or y_position == 3:
             if side == Team.BLACK:
-                return 1.0
+                return 0.0
             elif side == Team.WHITE:
-                return 1.0
+                return 0.0
         elif y_position == 4 or y_position == 5:
             if side == Team.BLACK:
-                return 0.5
+                return 0.0
             elif side == Team.WHITE:
-                return 0.5
+                return 0.0
         elif y_position == 6 or y_position == 7:
             if side == Team.BLACK:
-                return -0.5
+                return 0.0
             elif side == Team.WHITE:
                 return 1.0
 
@@ -256,16 +250,25 @@ class CheckersEnv:
 
         for state_action_value_pair in self.current_game_moves:
             cur_val = state_action_value_pair.get_action_pair().get_value()
+            action_pair = state_action_value_pair.get_action_pair()
 
             if outcome == outcome.WIN:
-                state_action_value_pair.get_action_pair().update_value(cur_val + update_value_by)
+                action_pair.update_value(cur_val + update_value_by)
+                self.reinforce_move_that_captured(action_pair, 10)
 
             elif outcome == outcome.LOSE:
                 state_action_value_pair.get_action_pair().update_value(cur_val - update_value_by)
+                self.reinforce_move_that_captured(action_pair, 1)
 
             elif outcome == outcome.TIE:
-                #Slight positive kick to tie moves
+                # Slight positive kick to tie moves
                 state_action_value_pair.get_action_pair().update_value(cur_val + 0.5)
+                self.reinforce_move_that_captured(action_pair, 5)
+
+    def reinforce_move_that_captured(self, action_pair, value):
+        if action_pair.get_action().get_took_enemy_piece():
+            action_pair.update_value(value * self.learning_rate)
+            print("debug")
 
     def integrate_last_game_moves_to_state_space(self):
 
@@ -273,17 +276,14 @@ class CheckersEnv:
 
     def calculate_distance_from_centre(self, x_position):
 
-        # find difference between index and centre
-        # if difference is 0, it's at centre, then take difference of that, 4 = high value at center
-
         if x_position == 0 or x_position == 7:
-            return 0.0
+            return -2.0
         elif x_position == 1 or x_position == 6:
             return 1.0
         elif x_position == 2 or x_position == 5:
             return 1.5
         elif x_position == 3 or x_position == 4:
-            return 1.5
+            return 2.0
 
     def update_action_value_pairs(self):
 
@@ -319,9 +319,8 @@ class CheckersEnv:
 
     def increment_file_write_tracker(self):
 
-        WR, WR_10 = self.player_agent.calculate_WRs()
-
-        if self.write_to_file_tracker == 2000:
+        if self.write_to_file_tracker == 1000:
+            WR, WR_10 = self.player_agent.calculate_WRs()
             self.Env_Metrics.write_env_data_to_file(WR, WR_10, self.player_agent.get_games_played()
                                                     , self.player_agent.get_team())
             self.write_to_file_tracker = 0
@@ -332,7 +331,6 @@ class CheckersEnv:
         self.set_current_state(board)
         self.set_player(player)
         self.reset_action_value_pairs()
-
 
     def get_action_value_pairs(self):
         return self.action_value_pairs

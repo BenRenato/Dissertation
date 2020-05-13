@@ -8,6 +8,13 @@ class Move:
         self.endposition = endposition
         self.player = player
         self.updatenow = update
+        self.took_enemy_piece = False
+
+    def set_took_piece(self):
+        self.took_enemy_piece = True
+
+    def get_took_enemy_piece(self):
+        return self.took_enemy_piece
 
     def makemove(self, boardstate):
 
