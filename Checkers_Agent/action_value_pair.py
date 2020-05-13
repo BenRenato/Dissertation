@@ -5,7 +5,7 @@ class Action_Value_Pair:
         self.move = move
         self.value = value
 
-    def get_value_action_pair(self):
+    def get_action_value_pair(self):
 
         return self.move, self.value
 
@@ -14,6 +14,9 @@ class Action_Value_Pair:
 
     def get_action(self):
         return self.move
+
+    def update_value(self, value):
+        self.value = value
 
     def __str__(self):
         return "Move: " + str(self.move) + "Value: " + str(self.value)

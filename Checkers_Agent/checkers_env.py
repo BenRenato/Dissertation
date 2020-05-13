@@ -74,10 +74,7 @@ class CheckersEnv:
 
         new_state_action_value_pair = State_Action_Pair(deepcopy(self.current_state.get_board()), best_move)
 
-        if matching_action_pair is None:
-            self.state_action_value_pairs.append(new_state_action_value_pair)
-
-        self.current_game_moves.append(new_state_action_value_pair.get_action_pair())
+        self.current_game_moves.append(new_state_action_value_pair)
 
         return best_move.get_action()
 
@@ -247,9 +244,32 @@ class CheckersEnv:
                 return 1.0
 
     # Update state_space data based on win/lose
-    def post_game_heuristics(self, outcome_black, outcome_white):
-        # TODO HERE
+    def post_game_heuristics(self, outcome):
         self.used_too_much_ram()
+        if not self.heuristic_mode:
+            self.update_current_game_state_action_value_pairs(outcome)
+        self.integrate_last_game_moves_to_state_space()
+        self.reset_current_games_moves()
+
+    def update_current_game_state_action_value_pairs(self, outcome):
+        update_value_by = self.learning_rate * 2
+
+        for state_action_value_pair in self.current_game_moves:
+            cur_val = state_action_value_pair.get_action_pair().get_value()
+
+            if outcome == outcome.WIN:
+                state_action_value_pair.get_action_pair().update_value(cur_val + update_value_by)
+
+            elif outcome == outcome.LOSE:
+                state_action_value_pair.get_action_pair().update_value(cur_val - update_value_by)
+
+            elif outcome == outcome.TIE:
+                #Slight positive kick to tie moves
+                state_action_value_pair.get_action_pair().update_value(cur_val + 0.5)
+
+    def integrate_last_game_moves_to_state_space(self):
+
+        self.state_action_value_pairs.extend(self.current_game_moves)
 
     def calculate_distance_from_centre(self, x_position):
 
@@ -301,7 +321,7 @@ class CheckersEnv:
 
         WR, WR_10 = self.player_agent.calculate_WRs()
 
-        if self.write_to_file_tracker == 10:
+        if self.write_to_file_tracker == 2000:
             self.Env_Metrics.write_env_data_to_file(WR, WR_10, self.player_agent.get_games_played()
                                                     , self.player_agent.get_team())
             self.write_to_file_tracker = 0
@@ -312,7 +332,7 @@ class CheckersEnv:
         self.set_current_state(board)
         self.set_player(player)
         self.reset_action_value_pairs()
-        self.reset_current_games_moves()
+
 
     def get_action_value_pairs(self):
         return self.action_value_pairs
@@ -346,7 +366,7 @@ class CheckersEnv:
 
     def used_too_much_ram(self):
 
-        defined_memory = 100
+        defined_memory = 2048
 
         if self.Env_Metrics.get_ram_footprint() > defined_memory:
             print("More than {} used, culling cached state_space...".format(defined_memory))

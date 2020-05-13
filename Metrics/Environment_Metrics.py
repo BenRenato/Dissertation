@@ -21,11 +21,9 @@ class Env_Metrics:
     def cull_cached_state_space(self, state_space):
 
         quartile = self.get_first_quartile_of_state_values(state_space)
-        self.muppy_object_summary()
         if self.delete_states_below_first_quartile(quartile, state_space):
             print("successfully culled data.")
             gc.collect()
-            self.muppy_object_summary()
             return True
         else:
             return False
@@ -49,7 +47,7 @@ class Env_Metrics:
         if os.path.exists("env_data.txt"):
             print("Previous env data found, deleting...")
             os.remove("env_data.txt")
-            sleep(5)
+            sleep(2)
         else:
             pass
 

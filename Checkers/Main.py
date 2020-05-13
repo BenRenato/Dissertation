@@ -17,7 +17,8 @@ def main():
                        "3. Random CPU vs Heuristic agent (black)\n" +
                        "4. Heuristic agent vs Heuristic agent\n" +
                        "5. Random CPU vs RL agent\n" +
-                       "6. RL agent vs RL agent\n"))
+                       "6. RL agent vs RL agent\n" +
+                       "7. Heuristic vs RL agent\n"))
 
     if choice == 1:
         game = Game(pt.HUMAN, pt.HUMAN)
@@ -41,6 +42,10 @@ def main():
 
     elif choice == 6:
         game = Game(pt.AI, pt.AI)
+        game.run()
+
+    elif choice == 7:
+        game = Game(pt.HEURISTIC, pt.AI)
         game.run()
 
 

@@ -37,3 +37,4 @@ class Game_Type(Enum):
     HvH = 4
     RvAI = 5
     AIvAI = 6
+    HvAI = 7

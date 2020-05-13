@@ -73,24 +73,11 @@ class Game:
 
             print(str(self.current_turn) + " turn: \n")
 
-            #TODO make the check for player_types be for game type
-            # Player input
             if self.game_type == gt.PvP:
                 self.take_player_input()
 
                 # Turn coords into keys
-                while True:
-                    try:
-                        self.check_if_exit()
-                        self.input_to_coordinates()
-                        self.send_move_request()
-                    # TODO double check ValueError is enough
-                    except ValueError:
-                        print("Wrong format")
-                        self.take_player_input()
-                        continue
-                    else:
-                        break
+                self.player_vs_player_loop()
 
             elif self.game_type == gt.RvR:
 
@@ -106,7 +93,7 @@ class Game:
                 self.random_vs_agent_game()
 
             elif self.game_type == gt.HvH:
-
+                # TODO method this agent init stuff
                 if self.init_agent:
                     self.env_white.init_env_vars(self.board, self.player1)
                     self.env_black.init_env_vars(self.board, self.player2)
@@ -115,42 +102,79 @@ class Game:
                 self.agent_vs_agent_game()
 
             elif self.game_type == gt.RvAI:
-                pass
+
+                if self.init_agent:
+                    self.env_black.init_env_vars(self.board, self.player2)
+                    self.init_agent = False
+
+                self.random_vs_agent_game()
+
+            elif self.game_type == gt.HvAI:
+
+                if self.init_agent:
+                    self.env_white.init_env_vars(self.board, self.player1)
+                    self.env_black.init_env_vars(self.board, self.player2)
+                    self.init_agent = False
+
+                self.agent_vs_agent_game()
 
             elif self.game_type == gt.AIvAI:
-                pass
+
+                if self.init_agent:
+                    self.env_white.init_env_vars(self.board, self.player1)
+                    self.env_black.init_env_vars(self.board, self.player2)
+                    self.init_agent = False
+
+                self.agent_vs_agent_game()
+
+    #TODO merge agent funcs and pass self.heuristic_only as a check for post_heuristic method
+
+    def player_vs_player_loop(self):
+        while True:
+            try:
+                self.check_if_exit()
+                self.input_to_coordinates()
+                self.send_move_request()
+            # TODO double check ValueError is enough
+            except ValueError:
+                print("Wrong format")
+                self.take_player_input()
+                continue
+            else:
+                break
 
     def exit_game_after_X_games(self):
 
-        if self.player2.get_games_played() == 800:
-            exit("100 games played")
+        if self.player2.get_games_played() == 200000:
+            self.env_black.Env_Metrics.muppy_object_summary()
+            exit("200k games played")
 
     def resolve_end_game_state_and_setup_next_game(self, type, winner):
 
-        if type == gt.RvH:
+        if type == gt.RvH or type == gt.RvAI:
             if winner == Team.BLACK:
-                self.new_random_vs_agent_game(oc.WIN)
-                self.env_black.post_game_heuristics(oc.WIN, oc.LOSE)
+                self.new_random_vs_heuristic_game(oc.WIN)
+                self.env_black.post_game_heuristics(oc.WIN)
             elif winner == Team.WHITE:
-                self.new_random_vs_agent_game(oc.LOSE)
-                self.env_black.post_game_heuristics(oc.LOSE, oc.WIN)
+                self.new_random_vs_heuristic_game(oc.LOSE)
+                self.env_black.post_game_heuristics(oc.LOSE)
             else:
-                self.new_random_vs_agent_game(oc.TIE)
-                self.env_black.post_game_heuristics(oc.TIE, oc.TIE)
+                self.new_random_vs_heuristic_game(oc.TIE)
+                self.env_black.post_game_heuristics(oc.TIE)
 
-        elif type == gt.HvH:
+        elif type == gt.HvH or type == gt.AIvAI or type == gt.HvAI:
             if winner == Team.BLACK:
                 self.new_agent_vs_agent_game(oc.WIN, oc.LOSE)
-                self.env_black.post_game_heuristics(oc.WIN, oc.LOSE)
-                self.env_white.post_game_heuristics(oc.LOSE, oc.WIN)
+                self.env_black.post_game_heuristics(oc.WIN)
+                self.env_white.post_game_heuristics(oc.LOSE)
             elif winner == Team.WHITE:
                 self.new_agent_vs_agent_game(oc.LOSE, oc.WIN)
-                self.env_black.post_game_heuristics(oc.WIN, oc.LOSE)
-                self.env_white.post_game_heuristics(oc.LOSE, oc.WIN)
+                self.env_black.post_game_heuristics(oc.LOSE)
+                self.env_white.post_game_heuristics(oc.WIN)
             else:
                 self.new_agent_vs_agent_game(oc.TIE, oc.TIE)
-                self.env_black.post_game_heuristics(oc.TIE, oc.TIE)
-                self.env_white.post_game_heuristics(oc.TIE, oc.TIE)
+                self.env_black.post_game_heuristics(oc.TIE)
+                self.env_white.post_game_heuristics(oc.TIE)
 
 
     def get_game_type(self):
@@ -170,6 +194,8 @@ class Game:
             return gt.RvAI
         elif white_type == pt.AI and black_type == pt.AI:
             return gt.AIvAI
+        elif white_type == pt.HEURISTIC and black_type == pt.AI:
+            return gt.HvAI
 
     def get_game_winner(self):
 
@@ -216,7 +242,7 @@ class Game:
         self.player1.init_player_vars()
         self.player2.init_player_vars()
 
-    def new_random_vs_agent_game(self, outcome):
+    def new_random_vs_heuristic_game(self, outcome):
         self.reset_game()
         self.env_black.init_env_vars(self.board, self.player2)
         self.env_black.update_games_and_win_or_lose(outcome)
@@ -341,7 +367,8 @@ class Game:
         if self.player1 is None or self.player2 is None:
             return False
 
-        if self.player1.get_number_of_current_moveable_pieces() == 0 or self.player2.get_number_of_current_moveable_pieces() == 0:
+        if self.player1.get_number_of_current_moveable_pieces() == 0 or \
+                self.player2.get_number_of_current_moveable_pieces() == 0:
             return True
 
     def get_player(self, player):
