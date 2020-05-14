@@ -10,20 +10,23 @@ class Env_Metrics:
     def __init__(self):
         pass
 
-    def write_env_data_to_file(self, WR, WR_10, game, team):
+    def write_env_data_to_file(self, WR, WR_10, game, team, state_space):
 
         ram_usage = self.get_ram_footprint()
 
         with open("env_data.txt", "a") as text_file:
             text_file.write("Game {} - WR for {} player (all/10 games): {:.2f}%/{:.2f}%\n"
-                            "RAM usage: {}MB\n".format(game, team, WR, WR_10, ram_usage))
+                            "RAM usage: {}MB State space items: {}\n".format(game, team, WR, WR_10, ram_usage,
+                                                                             state_space))
 
     def cull_cached_state_space(self, state_space):
 
+        print("Getting first quartile...")
         quartile = self.get_first_quartile_of_state_values(state_space)
+        print("Deleting values below 1Q...")
         if self.delete_states_below_first_quartile(quartile, state_space):
-            print("successfully culled data.")
             gc.collect()
+            print("successfully culled data.")
             return True
         else:
             return False
@@ -64,9 +67,11 @@ class Env_Metrics:
         for state_action_pair in state_space[:]:
             if state_action_pair.get_action_pair().get_value() < quartile:
                 state_space.remove(state_action_pair)
+                print("GC removing...")
             else:
+                print("passing deletion, value higher...")
                 pass
-
+        print("Collecting left overs of delete_states_below_first_quartile...")
         return True
 
     def build_list_of_state_values(self, state_space):

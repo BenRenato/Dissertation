@@ -74,7 +74,7 @@ class Move:
         if board[end_position_of_jump].getoccupier().team == Team.EMPTY:
             if self.updatenow == 1:
                 if self.update_pieces == 1:
-                    print("Updating taken piece")
+                    #print("Updating taken piece")
                     self.removepiece(board, self.endposition)
                 if self.player.get_player_type() != Player_Types.HEURISTIC and self.player.get_player_type() != Player_Types.AI:
                     self.endposition = end_position_of_jump

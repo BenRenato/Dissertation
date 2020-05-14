@@ -10,7 +10,7 @@ class Player:
         self.currentpieces = []
         self.current_moveable_pieces = []
 
-        self.last_ten_games = []
+        self.last_hundred_games = []
         self.games_played = 0
         self.games_won = 0
         self.games_lost = 0
@@ -131,15 +131,15 @@ class Player:
 
     def add_result_to_last_10_games(self, outcome):
 
-        if len(self.last_ten_games) == 10:
-            del self.last_ten_games[0]
+        if len(self.last_hundred_games) == 100:
+            del self.last_hundred_games[0]
             print("DELETED 0 INDEX")
 
-        self.last_ten_games.append(outcome)
+        self.last_hundred_games.append(outcome)
 
     def get_last_10_games(self):
 
-        return self.last_ten_games
+        return self.last_hundred_games
 
     def calculate_WRs(self):
 
@@ -147,18 +147,22 @@ class Player:
 
     def calculate_WR_overall(self):
 
-        return (self.games_won / self.games_played) * 100
+        games_played = self.games_won + self.games_lost
+
+        return (self.games_won / games_played) * 100
 
     def calculate_WR_past_10_games(self):
 
-        if len(self.last_ten_games) == 10:
+
+
+        if len(self.last_hundred_games) == 100:
             wins = 0
 
             for outcome in self.get_last_10_games():
                 if outcome == outcome.WIN:
                     wins += 1
 
-            return (wins / 10) * 100
+            return (wins / 100) * 100
         else:
             return 0
 

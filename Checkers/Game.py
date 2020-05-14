@@ -50,28 +50,23 @@ class Game:
 
     def run(self):
         self.board.setupdefaultboard()
-        self.board.printboard()
+        # self.board.printboard()
 
+        # TODO CHANGE TO PLAYER 2 FIRST HERE AND IN SET UP NEW GAME
         self.current_turn = random.choice([self.player1, self.player2])
-
-        # TODO change the game logic for each type of game to a method so we dont have to check
-        # TODO the player types every turn
-
-        #TODO perform heustistics, change values of pairs, then play again, repeat until x amount of games, print WR, policy weights, etc after each game
 
         while 1:
 
-            if self.check_terminal_state():
+            if self.check_terminal_state() is not None:
 
-                winner = self.get_game_winner()
+                winner = self.check_terminal_state()
 
-                print("The winner is " + str(winner) + ".")
-
+                print("The winner is " + str(winner))
                 self.resolve_end_game_state_and_setup_next_game(self.game_type, winner)
 
                 self.exit_game_after_X_games()
 
-            print(str(self.current_turn) + " turn: \n")
+            # print(str(self.current_turn) + " turn: \n")
 
             if self.game_type == gt.PvP:
                 self.take_player_input()
@@ -127,7 +122,7 @@ class Game:
 
                 self.agent_vs_agent_game()
 
-    #TODO merge agent funcs and pass self.heuristic_only as a check for post_heuristic method
+    # TODO merge agent funcs and pass self.heuristic_only as a check for post_heuristic method
 
     def player_vs_player_loop(self):
         while True:
@@ -176,7 +171,6 @@ class Game:
                 self.env_black.post_game_heuristics(oc.TIE)
                 self.env_white.post_game_heuristics(oc.TIE)
 
-
     def get_game_type(self):
 
         white_type = self.player1.get_player_type()
@@ -214,7 +208,6 @@ class Game:
 
     def agent_vs_agent_game(self):
 
-
         if self.current_turn == self.player1:
 
             agent_selected_move = self.agent_move_and_update(self.env_white)
@@ -249,7 +242,6 @@ class Game:
                 print("Agent move failed for " + str(self.current_turn))
                 print(self.current_turn.printcurrentpieces())
                 exit(1)
-
 
     def reset_game(self):
         self.board = checkboard(8, 8)
@@ -297,12 +289,11 @@ class Game:
             self.get_random_move()
             self.send_move_request()
 
-
     def send_move_request(self):
 
         move_request = move(self.piece_to_move, self.piece_move_to, self.current_turn, 1, 1)
 
-        print("Attemping: " + str(move_request))
+        # print("Attemping: " + str(move_request))
         if move_request.makemove(self.board):
             self.update_game_after_move()
             return True
@@ -387,11 +378,12 @@ class Game:
     def check_terminal_state(self):
 
         if self.player1 is None or self.player2 is None:
-            return False
+            return None
 
-        if self.player1.get_number_of_current_moveable_pieces() == 0 or \
-                self.player2.get_number_of_current_moveable_pieces() == 0:
-            return True
+        if self.player1.get_number_of_current_moveable_pieces() == 0 and self.current_turn == self.player1:
+            return self.player2.get_team()
+        elif self.player2.get_number_of_current_moveable_pieces() == 0 and self.current_turn == self.player2:
+            return self.player1.get_team()
 
     def get_player(self, player):
 

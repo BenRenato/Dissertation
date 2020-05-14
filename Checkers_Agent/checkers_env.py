@@ -68,7 +68,8 @@ class CheckersEnv:
 
         new_state_action_value_pair = State_Action_Pair(deepcopy(self.current_state.get_board()), best_move)
 
-        self.current_game_moves.append(new_state_action_value_pair)
+        if not self.heuristic_mode:
+            self.current_game_moves.append(new_state_action_value_pair)
 
         return best_move.get_action()
 
@@ -88,14 +89,17 @@ class CheckersEnv:
 
         if self.state_action_value_pairs:
 
+            current_match = None
             for pair in self.state_action_value_pairs:
                 if pair.compare_to_current_board(self.current_state.get_board()):
-                    print("##### FOUND STATE PREVIOUSLY ####")
-                    return pair.get_action_pair()
+                    if current_match is None:
+                        current_match = pair.get_action_pair()
+                    elif pair.get_action_pair().get_value() > current_match.get_value():
+                        current_match = pair.get_action_pair()
+                    else:
+                        pass
 
-            else:
-                print("No previous state found.")
-                return None
+            return current_match
 
         # Ignore PyCharm suggesting static method, we don't want to call this without a class instance
 
@@ -199,15 +203,6 @@ class CheckersEnv:
 
     def calculate_policy_with_current_values(self, a1, a2, b1, b2, c1, c2, d1, d2):
         # Ve =  α(A2 − A1) +  α(B2 − B1) +  α(C1 - C2)
-        # TODO tune the math here, maybe not factorial, could be square or just double etc
-
-        try:
-            d2 = factorial(d2)
-            d1 = factorial(d1)
-        except ValueError:
-            d1 = 0
-            d2 = 0
-            print("Factorial failed, possibly negative.")
 
         if self.player_agent.get_team() == Team.BLACK:
             return a2 + b2 + ((c2 - c1) ** 2) - (d2 ** 2)
@@ -268,7 +263,6 @@ class CheckersEnv:
     def reinforce_move_that_captured(self, action_pair, value):
         if action_pair.get_action().get_took_enemy_piece():
             action_pair.update_value(value * self.learning_rate)
-            print("debug")
 
     def integrate_last_game_moves_to_state_space(self):
 
@@ -319,10 +313,10 @@ class CheckersEnv:
 
     def increment_file_write_tracker(self):
 
-        if self.write_to_file_tracker == 1000:
+        if self.write_to_file_tracker == 100:
             WR, WR_10 = self.player_agent.calculate_WRs()
             self.Env_Metrics.write_env_data_to_file(WR, WR_10, self.player_agent.get_games_played()
-                                                    , self.player_agent.get_team())
+                                                    , self.player_agent.get_team(), len(self.state_action_value_pairs))
             self.write_to_file_tracker = 0
 
         self.write_to_file_tracker += 1
@@ -368,6 +362,9 @@ class CheckersEnv:
 
         if self.Env_Metrics.get_ram_footprint() > defined_memory:
             print("More than {} used, culling cached state_space...".format(defined_memory))
+            WR, WR_10 = self.player_agent.calculate_WRs()
+            self.Env_Metrics.write_env_data_to_file(WR, WR_10, self.player_agent.get_games_played(),
+                                                    self.player_agent.get_team(), len(self.state_action_value_pairs))
             self.Env_Metrics.cull_cached_state_space(self.get_current_state_action_value_pairs())
         else:
             pass
