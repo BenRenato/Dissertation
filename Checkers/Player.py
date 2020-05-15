@@ -4,158 +4,138 @@ import random
 
 class Player:
 
-    def __init__(self, isBlack, player_type):
-        self.isblack = isBlack
-        self.player_type = player_type
-        self.currentpieces = []
-        self.current_moveable_pieces = []
+    def __init__(self, is_black, player_type):
 
-        self.last_hundred_games = []
-        self.games_played = 0
-        self.games_won = 0
-        self.games_lost = 0
+        self._is_black = is_black
+        self._player_type = player_type
+        self._current_pieces = []
+        self._current_moveable_pieces = []
+
+        self._last_hundred_games = []
+        self._games_played = 0
+        self._games_won = 0
+        self._games_lost = 0
 
         self.init_player_vars()
 
     def init_player_vars(self):
-        self.init_current_moveable_pieces()
+        self._init_current_moveable_pieces()
 
-        self.init_current_pieces_on_board()
+        self._init_current_pieces_on_board()
 
-    def init_current_pieces_on_board(self):
-
-        # TODO change this to a hard coded set of pieces like init_current_moveable_pieces
-
-        self.currentpieces.clear()
+    def _init_current_pieces_on_board(self):
+        self._current_pieces.clear()
 
         for i in range(8):
             if i % 2 == 0:
-                if self.isblack:
+                if self._is_black:
                     # add to current pieces
-                    self.currentpieces.append([i, 5])
-                    self.currentpieces.append([i, 7])
+                    self._current_pieces.append([i, 5])
+                    self._current_pieces.append([i, 7])
 
                 else:
-                    self.currentpieces.append([i, 1])
+                    self._current_pieces.append([i, 1])
+
             else:
-                if self.isblack:
-                    self.currentpieces.append([i, 6])
+                if self._is_black:
+                    self._current_pieces.append([i, 6])
+
                 else:
-                    self.currentpieces.append([i, 0])
-                    self.currentpieces.append([i, 2])
+                    self._current_pieces.append([i, 0])
+                    self._current_pieces.append([i, 2])
 
-    def init_current_moveable_pieces(self):
+    def _init_current_moveable_pieces(self):
 
-        if self.isblack:
-            self.current_moveable_pieces = [[0, 5], [2, 5], [4, 5], [6, 5]]
+        if self._is_black:
+            self._current_moveable_pieces = [[0, 5], [2, 5], [4, 5], [6, 5]]
+
         else:
-            self.current_moveable_pieces = [[1, 2], [3, 2], [5, 2], [7, 2]]
+            self._current_moveable_pieces = [[1, 2], [3, 2], [5, 2], [7, 2]]
 
     def __str__(self):
-        if self.isblack:
+        if self._is_black:
             return "Black"
+
         else:
             return "White"
 
     def get_current_moveable_pieces(self):
-        return self.current_moveable_pieces
+        return self._current_moveable_pieces
 
     def get_player_type(self):
-        return self.player_type
+        return self._player_type
 
     def get_current_pieces(self):
-        return self.currentpieces
+        return self._current_pieces
 
     def get_number_of_pieces_on_board(self):
-        return len(self.currentpieces)
+        return len(self._current_pieces)
 
-    def update_moveable_pieces(self, updatedlist):
-
-        self.current_moveable_pieces = updatedlist
+    def update_moveable_pieces(self, updated_list):
+        self._current_moveable_pieces = updated_list
 
     def get_team(self):
-
-        if self.isblack:
+        if self._is_black:
             return Team.BLACK
+
         else:
             return Team.WHITE
 
     def remove_taken_piece(self, piece):
-
         try:
-            self.currentpieces.remove(self.currentpieces[self.currentpieces.index(piece)])
+            self._current_pieces.remove(self._current_pieces[self._current_pieces.index(piece)])
+
         except ValueError:
             return
 
-    def updatecurrentpieces(self, startpiece, endpiece):
+    def _update_current_pieces(self, startpiece, endpiece):
+        self._current_pieces.remove(self._current_pieces[self._current_pieces.index(startpiece)])
 
-        # print("Removing " + str(self.currentpieces[self.currentpieces.index(startpiece)]))
-        # print("Before removal " + str(sorted(self.currentpieces)))
-        self.currentpieces.remove(self.currentpieces[self.currentpieces.index(startpiece)])
-        # print("After removal " + str(sorted(self.currentpieces)))
+        self._current_pieces.append(endpiece)
 
-        # print("Appending " + str(endpiece))
-        self.currentpieces.append(endpiece)
-        # print("After appending: " + str(sorted(self.currentpieces)))
-
-    def printcurrentpieces(self):
-        print(sorted(self.currentpieces))
+    def print_current_pieces(self):
+        print(sorted(self._current_pieces))
 
     def get_number_of_current_moveable_pieces(self):
-        return len(self.current_moveable_pieces)
-
-    def terminal_moveable_pieces_state(self):
-
-        if self.get_number_of_current_moveable_pieces() == 0:
-            return True
-        else:
-            return False
+        return len(self._current_moveable_pieces)
 
     def get_games_played(self):
-        return self.games_played
+        return self._games_played
 
     def get_games_lost(self):
-        return self.games_lost
+        return self._games_lost
 
     def get_games_won(self):
-        return self.games_won
+        return self._games_won
 
     def increment_games_won(self):
-        self.games_won += 1
+        self._games_won += 1
 
     def increment_games_lost(self):
-        self.games_lost += 1
+        self._games_lost += 1
 
     def increment_games_played(self):
-        self.games_played += 1
+        self._games_played += 1
 
     def add_result_to_last_10_games(self, outcome):
+        if len(self._last_hundred_games) == 100:
+            del self._last_hundred_games[0]
 
-        if len(self.last_hundred_games) == 100:
-            del self.last_hundred_games[0]
-            print("DELETED 0 INDEX")
-
-        self.last_hundred_games.append(outcome)
+        self._last_hundred_games.append(outcome)
 
     def get_last_10_games(self):
-
-        return self.last_hundred_games
+        return self._last_hundred_games
 
     def calculate_WRs(self):
-
         return self.calculate_WR_overall(), self.calculate_WR_past_10_games()
 
     def calculate_WR_overall(self):
+        games_played = self._games_won + self._games_lost
 
-        games_played = self.games_won + self.games_lost
-
-        return (self.games_won / games_played) * 100
+        return (self._games_won / games_played) * 100
 
     def calculate_WR_past_10_games(self):
-
-
-
-        if len(self.last_hundred_games) == 100:
+        if len(self._last_hundred_games) == 100:
             wins = 0
 
             for outcome in self.get_last_10_games():
@@ -163,37 +143,39 @@ class Player:
                     wins += 1
 
             return (wins / 100) * 100
+
         else:
             return 0
 
 
-
 class RandomPlayer(Player):
 
-    def __init__(self, isBlack, player_type):
+    def __init__(self, is_black, player_type):
         # Call super init to inherit members
-        Player.__init__(self, isBlack, player_type)
+        Player.__init__(self, is_black, player_type)
+
         self.chosen_piece = None
         self.chosen_piece_move_to = None
 
     def choose_random_start_position(self):
+        self.chosen_piece = random.choice(self._current_moveable_pieces)
 
-        self.chosen_piece = random.choice(self.current_moveable_pieces)
         return self.chosen_piece
 
     def choose_random_end_position(self, start_position):
-
         temp_position = start_position
 
         direction = random.choice([Direction.RIGHT, Direction.LEFT])
 
-        if self.isblack:
+        if self._is_black:
             temp_position[1] -= 1
+
         else:
             temp_position[1] += 1
 
         if direction == Direction.LEFT:
             temp_position[0] -= 1
+
         elif direction == Direction.RIGHT:
             temp_position[0] += 1
 

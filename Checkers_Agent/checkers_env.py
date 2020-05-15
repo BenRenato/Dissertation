@@ -1,9 +1,9 @@
 from multiprocessing import Process, Queue
 from Checkers.Enums import Team, Outcome
 from Checkers.Move import Move
-from Checkers_Agent.state_action_pair import State_Action_Pair
-from Checkers_Agent.action_value_pair import Action_Value_Pair
-from Metrics.Environment_Metrics import Env_Metrics
+from Checkers_Agent.StateActionPair import StateActionPair
+from Checkers_Agent.ActionValuePair import ActionValuePair
+from Metrics.Environment_Metrics import EnvMetrics
 from copy import deepcopy
 import random as rand
 
@@ -33,7 +33,7 @@ class CheckersEnv:
         self.write_to_file_tracker = 1
         self.first_write_to_file = True
         self.heuristic_mode = heuristics_only
-        self.Env_Metrics = Env_Metrics()
+        self.Env_Metrics = EnvMetrics()
 
         self.Env_Metrics.delete_previous_data()
 
@@ -64,7 +64,7 @@ class CheckersEnv:
 
         best_move = self.evaluate_best_move(possible_action_values)
 
-        new_state_action_value_pair = State_Action_Pair(deepcopy(self.current_state.get_board()), best_move)
+        new_state_action_value_pair = StateActionPair(deepcopy(self.current_state.get_board()), best_move)
 
         if not self.heuristic_mode:
             self.current_game_moves.append(new_state_action_value_pair)
@@ -79,7 +79,7 @@ class CheckersEnv:
 
             if action_to_evaluate.make_move(temp_state):
                 state_value = self.state_value_from_policy(temp_state)
-                possible_action_values.append(Action_Value_Pair(action_to_evaluate, state_value))
+                possible_action_values.append(ActionValuePair(action_to_evaluate, state_value))
             else:
                 pass
 
@@ -151,13 +151,13 @@ class CheckersEnv:
 
         for i in range(state.get_x()):
             for j in range(state.get_y()):
-                if state[i, j].getoccupier().team == Team.BLACK:
+                if state[i, j].get_occupier().get_team() == Team.BLACK:
                     black_sum_distance_to_other_side += self.calculate_distance_to_other_side(j, Team.BLACK)
                     black_sum_of_distance_to_centre += self.calculate_distance_from_centre(i)
 
                     black_counters_on_board += 1
 
-                elif state[i, j].getoccupier().team == Team.WHITE:
+                elif state[i, j].get_occupier().get_team() == Team.WHITE:
                     white_sum_distance_to_other_side += self.calculate_distance_to_other_side(j, Team.WHITE)
                     white_sum_distance_to_centre += self.calculate_distance_from_centre(i)
 
@@ -185,7 +185,7 @@ class CheckersEnv:
             # It's okay, for i, for j is still most Pythonic  : )
             for i in range(state.get_x()):
                 for j in range(state.get_y()):
-                    if state[i, j].getoccupier().team == self.player_agent.get_team():
+                    if state[i, j].get_occupier().get_team() == self.player_agent.get_team():
                         if least_advanced_piece_y_axis is None:
                             least_advanced_piece_y_axis = j
                         elif j > least_advanced_piece_y_axis:
@@ -330,7 +330,7 @@ class CheckersEnv:
     def append_action_value_pair(self, old_position, new_position):
         if 0 <= new_position[0] < 8 and 0 <= new_position[1] < 8:
             self.action_value_pairs.append(
-                Action_Value_Pair(Move(old_position, new_position, self.player_agent, 1, 0), 1))
+                ActionValuePair(Move(old_position, new_position, self.player_agent, 1, 0), 1))
         else:
             return
 

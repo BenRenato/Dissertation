@@ -5,13 +5,10 @@ import numpy as np
 from pympler import muppy, summary
 import gc
 
-class Env_Metrics:
 
+class EnvMetrics:
     def __init__(self):
-
         self.cull_data = True
-
-        pass
 
     def write_env_data_to_file(self, WR, WR_10, game, team, state_space):
 
@@ -23,63 +20,75 @@ class Env_Metrics:
                                                                              state_space))
 
     def cull_cached_state_space(self, state_space):
-
         print("Getting first quartile...")
-        quartile = self.get_first_quartile_of_state_values(state_space)
+
+        quartile = self._get_first_quartile_of_state_values(state_space)
+
         print("Deleting values below 1Q...")
-        if self.delete_states_below_first_quartile(quartile, state_space) and self.cull_data:
+
+        if self._delete_states_below_first_quartile(quartile, state_space) and self.cull_data:
             gc.collect()
+
             print("successfully culled data.")
+
             self.cull_data = False
+
             return True
+
         else:
             self.cull_data = True
+
             return False
 
-    def muppy_object_summary(self):
+    def _muppy_object_summary(self):
         all_objects = muppy.get_objects()
         sum1 = summary.summarize(all_objects)
         summary.print_(sum1)
         sleep(5)
 
     def get_ram_footprint(self):
-
         process = psutil.Process(os.getpid())
+
         footprint = process.memory_info().rss / 1024 / 1024
+
         print("RAM footprint is: " + str(footprint) + " MB")
 
         return footprint
 
     def delete_previous_data(self):
-
         if os.path.exists("env_data.txt"):
             print("Previous env data found, deleting...")
+
             os.remove("env_data.txt")
-            sleep(2)
+
+            sleep(1)
+
         else:
             pass
 
-    def get_first_quartile_of_state_values(self, state_space):
-
-        value_space = self.build_list_of_state_values(state_space)
+    def _get_first_quartile_of_state_values(self, state_space):
+        value_space = self._build_list_of_state_values(state_space)
 
         first_quartile = np.percentile(value_space, 25)
 
         return first_quartile
 
-    def delete_states_below_first_quartile(self, quartile, state_space):
+    def _delete_states_below_first_quartile(self, quartile, state_space):
 
         for state_action_pair in state_space[:]:
             if state_action_pair.get_action_pair().get_value() < quartile:
                 state_space.remove(state_action_pair)
+
                 print("GC removing...")
+
             else:
                 print("passing deletion, value higher...")
-                pass
+
         print("Collecting left overs of delete_states_below_first_quartile...")
+
         return True
 
-    def build_list_of_state_values(self, state_space):
+    def _build_list_of_state_values(self, state_space):
 
         list_of_state_values = []
 

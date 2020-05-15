@@ -1,24 +1,25 @@
 from Checkers.Piece import Piece as piece
+from Checkers.Enums import Team
 
 
 class Space:
 
     def __init__(self):
-        self._OccupiedBy = piece("empty", "empty")
+        self._occupied_by = piece("empty", "empty")
 
     def updateoccupier(self, team, rank):
-        self._OccupiedBy = piece(team, rank)
+        self._occupied_by = piece(team, rank)
 
-    def getoccupier(self):
-        return self._OccupiedBy
+    def get_occupier(self):
+        return self._occupied_by
 
     def __eq__(self, other):
-        return self._OccupiedBy == other.getoccupier()
+        return self._occupied_by == other.get_occupier()
 
     def __repr__(self):
-        if self._OccupiedBy.team == self._OccupiedBy.team.EMPTY:
+        if self._occupied_by.get_team() == Team.EMPTY:
             return " "
-        elif self._OccupiedBy.team == self._OccupiedBy.team.BLACK:
+        elif self._occupied_by.get_team() == Team.BLACK:
             return "B"
-        elif self._OccupiedBy.team == self._OccupiedBy.team.WHITE:
+        elif self._occupied_by.get_team() ==Team.WHITE:
             return "W"

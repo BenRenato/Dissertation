@@ -31,7 +31,7 @@ class Move:
                 self._update_piece(board, self._start_position, self._end_position)
 
                 if self._update_pieces == 1:
-                    self.player.updatecurrentpieces(self._start_position, self._end_position)
+                    self.player._update_current_pieces(self._start_position, self._end_position)
 
             return True
 
@@ -41,10 +41,10 @@ class Move:
     def _validate_move(self, board):
 
         if self._validate_movement_correct():
-            if board[self._end_position].getoccupier().team == Team.EMPTY:
+            if board[self._end_position].get_occupier().get_team() == Team.EMPTY:
                 return True
 
-            elif board[self._end_position].getoccupier().team != self.player.get_team():
+            elif board[self._end_position].get_occupier().get_team() != self.player.get_team():
                 if self._validate_taking_move(board):
 
                     return True
@@ -78,7 +78,7 @@ class Move:
         if not self._check_position_out_of_bounds(end_position_of_jump):
             return False
 
-        if board[end_position_of_jump].getoccupier().team == Team.EMPTY:
+        if board[end_position_of_jump].get_occupier().get_team() == Team.EMPTY:
             if self._update_now == 1:
                 if self._update_pieces == 1:
                     self._remove_piece(board, self._end_position)
@@ -109,7 +109,7 @@ class Move:
 
     def _get_vertical_direction(self):
 
-        if self.player.isblack:
+        if self.player.get_team() == Team.BLACK:
             return Direction.UP
         else:
             return Direction.DOWN
@@ -124,7 +124,7 @@ class Move:
 
     def _validate_movement_correct(self):
         # Move in correct direction
-        if self.player.isblack:
+        if self.player.get_team() == Team.BLACK:
             if abs(self._start_position[0] - self._end_position[0]) != 1 \
                     or (self._start_position[1] - self._end_position[1]) != 1:
                 return False
@@ -151,9 +151,9 @@ class Move:
         a, b = move_from
         x, y = move_to
 
-        start_piece = board[a, b].getoccupier()
+        start_piece = board[a, b].get_occupier()
 
-        board[x, y].updateoccupier(start_piece.team, start_piece.rank)
+        board[x, y].updateoccupier(start_piece.get_team(), start_piece.get_rank())
 
         self._remove_piece(board, move_from)
 
@@ -162,7 +162,7 @@ class Move:
         if not self._check_position_out_of_bounds(start) or not self._check_position_out_of_bounds(end):
             return False
 
-        if board[self._start_position].getoccupier().team == Team.EMPTY:
+        if board[self._start_position].get_occupier().get_team() == Team.EMPTY:
             print("Specificed piece doesn't exist")
             return False
 
