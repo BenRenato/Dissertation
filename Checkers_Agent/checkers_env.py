@@ -1,4 +1,3 @@
-from time import sleep
 from multiprocessing import Process, Queue
 from Checkers.Enums import Team, Outcome
 from Checkers.Move import Move
@@ -7,7 +6,6 @@ from Checkers_Agent.action_value_pair import Action_Value_Pair
 from Metrics.Environment_Metrics import Env_Metrics
 from copy import deepcopy
 import random as rand
-from math import exp, factorial
 
 
 # TODO need to make new_agent_vs_agent_game() in game() to accomodate the white agent
@@ -79,7 +77,7 @@ class CheckersEnv:
             temp_state = deepcopy(self.current_state)
             action_to_evaluate = pair.get_action()
 
-            if action_to_evaluate.makemove(temp_state):
+            if action_to_evaluate.make_move(temp_state):
                 state_value = self.state_value_from_policy(temp_state)
                 possible_action_values.append(Action_Value_Pair(action_to_evaluate, state_value))
             else:

@@ -8,6 +8,9 @@ import gc
 class Env_Metrics:
 
     def __init__(self):
+
+        self.cull_data = True
+
         pass
 
     def write_env_data_to_file(self, WR, WR_10, game, team, state_space):
@@ -24,11 +27,13 @@ class Env_Metrics:
         print("Getting first quartile...")
         quartile = self.get_first_quartile_of_state_values(state_space)
         print("Deleting values below 1Q...")
-        if self.delete_states_below_first_quartile(quartile, state_space):
+        if self.delete_states_below_first_quartile(quartile, state_space) and self.cull_data:
             gc.collect()
             print("successfully culled data.")
+            self.cull_data = False
             return True
         else:
+            self.cull_data = True
             return False
 
     def muppy_object_summary(self):

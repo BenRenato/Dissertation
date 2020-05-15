@@ -5,18 +5,18 @@ class CheckerBoard:
     _board = [[]]
 
     def __init__(self, x, y):
-        # TODO explain this list comprehension optimisation
         self._board = [[space() for i in range(x)] for j in range(y)]
-        self.height = y
-        self.width = x
+
+        self._height = y
+        self._width = x
 
     def __getitem__(self, key):
         # Tuple unpack, key = [x, y]
         x, y = key
+
         return self._board[x][y]
 
     def __repr__(self):
-
         return str(self._board)
 
     def printboard(self):
@@ -25,7 +25,7 @@ class CheckerBoard:
 
     def setupdefaultboard(self):
         # Check if normal 8x8 board, assumes 8x8 anyway, just checking for debug purposes.
-        if self.width == 8:
+        if self._width == 8:
             for i in range(8):
                 if i % 2 == 0:
                     # Set even space white checkers
@@ -45,10 +45,10 @@ class CheckerBoard:
                     self._board[i][6].updateoccupier("black", "basic")
 
     def get_x(self):
-        return self.width
+        return self._width
 
     def get_y(self):
-        return self.height
+        return self._height
 
     def get_board(self):
         return self._board
