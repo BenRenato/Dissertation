@@ -5,11 +5,14 @@ import numpy as np
 from pympler import muppy, summary
 import gc
 
+# This class is responsible for recording the software metrics, and memory management, as well as
+# writing environment data to a text file.
 
 class EnvMetrics:
     def __init__(self):
         self.cull_data = True
 
+    #----I/O TO TEXT FILE METHODS----#
     def write_env_data_to_file(self, WR, WR_10, game, team, state_space):
 
         ram_usage = self.get_ram_footprint()
@@ -18,6 +21,17 @@ class EnvMetrics:
             text_file.write("Game {} - WR for {} player (all/10 games): {:.2f}%/{:.2f}%\n"
                             "RAM usage: {}MB State space items: {}\n".format(game, team, WR, WR_10, ram_usage,
                                                                              state_space))
+
+    def delete_previous_data(self):
+        if os.path.exists("env_data.txt"):
+            print("Previous env data found, deleting...")
+
+            os.remove("env_data.txt")
+
+            sleep(1)
+
+        else:
+            pass
 
     def cull_cached_state_space(self, state_space):
         print("Getting first quartile...")
@@ -40,6 +54,7 @@ class EnvMetrics:
 
             return False
 
+    #----MEMORY MANAGEMENT METHODS----#
     def _muppy_object_summary(self):
         all_objects = muppy.get_objects()
         sum1 = summary.summarize(all_objects)
@@ -54,17 +69,6 @@ class EnvMetrics:
         print("RAM footprint is: " + str(footprint) + " MB")
 
         return footprint
-
-    def delete_previous_data(self):
-        if os.path.exists("env_data.txt"):
-            print("Previous env data found, deleting...")
-
-            os.remove("env_data.txt")
-
-            sleep(1)
-
-        else:
-            pass
 
     def _get_first_quartile_of_state_values(self, state_space):
         value_space = self._build_list_of_state_values(state_space)
@@ -89,7 +93,6 @@ class EnvMetrics:
         return True
 
     def _build_list_of_state_values(self, state_space):
-
         list_of_state_values = []
 
         for state_action_value in state_space:

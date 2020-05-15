@@ -2,6 +2,8 @@ from Checkers.Game import Game
 from Checkers.Enums import Player_Types as pt
 import cProfile
 
+# This is the module that is used to start the program. It takes user input and executes game.run().
+
 def main():
 
     choice = int(input("Which game type?\n" +

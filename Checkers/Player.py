@@ -1,6 +1,9 @@
 from Checkers.Enums import Team, Direction
 import random
 
+# This class is a data representation of a real life player.
+# The methods here are used to track pieces owned, generate random moves, and track various player statistics
+# such as win rates, player types, and what side they're playing.
 
 class Player:
 
@@ -18,6 +21,7 @@ class Player:
 
         self.init_player_vars()
 
+    #----INIT METHODS----#
     def init_player_vars(self):
         self._init_current_moveable_pieces()
 
@@ -52,6 +56,7 @@ class Player:
         else:
             self._current_moveable_pieces = [[1, 2], [3, 2], [5, 2], [7, 2]]
 
+    #----CLASS ATTRIBUTE METHODS----#
     def __str__(self):
         if self._is_black:
             return "Black"
@@ -59,6 +64,7 @@ class Player:
         else:
             return "White"
 
+    #----GETTERS AND SETTERS----#
     def get_current_moveable_pieces(self):
         return self._current_moveable_pieces
 
@@ -81,18 +87,6 @@ class Player:
         else:
             return Team.WHITE
 
-    def remove_taken_piece(self, piece):
-        try:
-            self._current_pieces.remove(self._current_pieces[self._current_pieces.index(piece)])
-
-        except ValueError:
-            return
-
-    def _update_current_pieces(self, startpiece, endpiece):
-        self._current_pieces.remove(self._current_pieces[self._current_pieces.index(startpiece)])
-
-        self._current_pieces.append(endpiece)
-
     def print_current_pieces(self):
         print(sorted(self._current_pieces))
 
@@ -108,6 +102,10 @@ class Player:
     def get_games_won(self):
         return self._games_won
 
+    def get_last_10_games(self):
+        return self._last_hundred_games
+
+    #----PLAYER STATISTICS TRACKERS OR MODIFIERS----#
     def increment_games_won(self):
         self._games_won += 1
 
@@ -122,9 +120,6 @@ class Player:
             del self._last_hundred_games[0]
 
         self._last_hundred_games.append(outcome)
-
-    def get_last_10_games(self):
-        return self._last_hundred_games
 
     def calculate_WRs(self):
         return self.calculate_WR_overall(), self.calculate_WR_past_10_games()
@@ -147,6 +142,18 @@ class Player:
         else:
             return 0
 
+    def remove_taken_piece(self, piece):
+        try:
+            self._current_pieces.remove(self._current_pieces[self._current_pieces.index(piece)])
+
+        except ValueError:
+            return
+
+    def _update_current_pieces(self, startpiece, endpiece):
+        self._current_pieces.remove(self._current_pieces[self._current_pieces.index(startpiece)])
+
+        self._current_pieces.append(endpiece)
+
 
 class RandomPlayer(Player):
 
@@ -157,6 +164,7 @@ class RandomPlayer(Player):
         self.chosen_piece = None
         self.chosen_piece_move_to = None
 
+    #----RANDOM SELECTION METHODS----#
     def choose_random_start_position(self):
         self.chosen_piece = random.choice(self._current_moveable_pieces)
 

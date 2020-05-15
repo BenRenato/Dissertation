@@ -1,6 +1,9 @@
 from Checkers.Space import Space as space
 
 
+# This class is the data structure representation of a checkerboard.
+# The methods contained within this class are used to initialise a board, fill it with pieces, and render them.
+
 class CheckerBoard:
     _board = [[]]
 
@@ -10,6 +13,7 @@ class CheckerBoard:
         self._height = y
         self._width = x
 
+    #----CLASS ATTRIBUTE METHODS----#
     def __getitem__(self, key):
         # Tuple unpack, key = [x, y]
         x, y = key
@@ -19,6 +23,7 @@ class CheckerBoard:
     def __repr__(self):
         return str(self._board)
 
+    #----BOARD METHODS----#
     def printboard(self):
         for row in zip(*self._board):
             print("".join(str(row)))
@@ -29,21 +34,22 @@ class CheckerBoard:
             for i in range(8):
                 if i % 2 == 0:
                     # Set even space white checkers
-                    self._board[i][1].updateoccupier("white", "basic")
+                    self._board[i][1].update_occupier("white", "basic")
 
                     # Set even space black checkers
-                    self._board[i][5].updateoccupier("black", "basic")
-                    self._board[i][7].updateoccupier("black", "basic")
+                    self._board[i][5].update_occupier("black", "basic")
+                    self._board[i][7].update_occupier("black", "basic")
 
 
                 else:
                     # Set odd space white checkers
-                    self._board[i][0].updateoccupier("white", "basic")
-                    self._board[i][2].updateoccupier("white", "basic")
+                    self._board[i][0].update_occupier("white", "basic")
+                    self._board[i][2].update_occupier("white", "basic")
 
                     # Set odd space black checkers
-                    self._board[i][6].updateoccupier("black", "basic")
+                    self._board[i][6].update_occupier("black", "basic")
 
+    #----SETTERS AND GETTERS----#
     def get_x(self):
         return self._width
 

@@ -13,12 +13,11 @@ class Move:
 
         self._took_enemy_piece = False
 
-    def set_took_piece(self):
-        self._took_enemy_piece = True
+    #----CLASS ATTRIBUTE METHODS----#
+    def __repr__(self):
+        return "Positions " + str(self._start_position + self._end_position)
 
-    def get_took_enemy_piece(self):
-        return self._took_enemy_piece
-
+    #----MOVE METHOD LOGIC----#
     def make_move(self, board_state):
 
         board = board_state
@@ -53,7 +52,6 @@ class Move:
                     return False
             else:
                 return False
-
 
     def _validate_taking_move(self, board):
 
@@ -93,35 +91,6 @@ class Move:
         else:
             return False
 
-    def _check_position_out_of_bounds(self, position):
-        try:
-            x, y = position
-
-        except Exception:
-            return False
-
-        # Cannot move off board
-        if x >= 8 or x < 0 or y >= 8 or y < 0:
-            return False
-
-        else:
-            return True
-
-    def _get_vertical_direction(self):
-
-        if self.player.get_team() == Team.BLACK:
-            return Direction.UP
-        else:
-            return Direction.DOWN
-
-    def _get_horizontal_direction(self):
-
-        if self._start_position[0] - self._end_position[0] == 1:
-            return Direction.LEFT
-
-        else:
-            return Direction.RIGHT
-
     def _validate_movement_correct(self):
         # Move in correct direction
         if self.player.get_team() == Team.BLACK:
@@ -140,22 +109,20 @@ class Move:
             else:
                 return True
 
-    def _remove_piece(self, board, key):
+    #----MOVE POSITIONAL CHECKS----#
+    def _check_position_out_of_bounds(self, position):
+        try:
+            x, y = position
 
-        x, y = key
+        except Exception:
+            return False
 
-        board[x, y].updateoccupier("empty", "empty")
+        # Cannot move off board
+        if x >= 8 or x < 0 or y >= 8 or y < 0:
+            return False
 
-    def _update_piece(self, board, move_from, move_to):
-
-        a, b = move_from
-        x, y = move_to
-
-        start_piece = board[a, b].get_occupier()
-
-        board[x, y].updateoccupier(start_piece.get_team(), start_piece.get_rank())
-
-        self._remove_piece(board, move_from)
+        else:
+            return True
 
     def _check_positions_are_valid(self, board, start, end):
 
@@ -169,6 +136,25 @@ class Move:
         else:
             return True
 
+    #----BOARD UPDATES----#
+    def _remove_piece(self, board, key):
+
+        x, y = key
+
+        board[x, y].update_occupier("empty", "empty")
+
+    def _update_piece(self, board, move_from, move_to):
+
+        a, b = move_from
+        x, y = move_to
+
+        start_piece = board[a, b].get_occupier()
+
+        board[x, y].update_occupier(start_piece.get_team(), start_piece.get_rank())
+
+        self._remove_piece(board, move_from)
+
+    #----SETTERS AND GETTERS----#
     def get_start_position(self):
         return self._start_position
 
@@ -178,5 +164,23 @@ class Move:
     def set_update_pieces_value(self, update_pieces):
         self._update_pieces = update_pieces
 
-    def __repr__(self):
-        return "Positions " + str(self._start_position + self._end_position)
+    def _get_vertical_direction(self):
+
+        if self.player.get_team() == Team.BLACK:
+            return Direction.UP
+        else:
+            return Direction.DOWN
+
+    def _get_horizontal_direction(self):
+
+        if self._start_position[0] - self._end_position[0] == 1:
+            return Direction.LEFT
+
+        else:
+            return Direction.RIGHT
+
+    def set_took_piece(self):
+        self._took_enemy_piece = True
+
+    def get_took_enemy_piece(self):
+        return self._took_enemy_piece

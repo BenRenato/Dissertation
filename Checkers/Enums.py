@@ -1,5 +1,6 @@
 from enum import Enum
 
+#This module holds all the Enum classes that are used within the program, it is self-explanatory.
 
 class Team(Enum):
     BLACK = "black"
